@@ -1,0 +1,66 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --cream: #FAF8F3;
+  --cream2: #F3EFE6;
+  --cream3: #EAE4D6;
+  --gold: #B8965A;
+  --gold2: #D4AF72;
+  --gold3: #8B6E3A;
+  --text: #1C1A16;
+  --text2: #5C5749;
+  --text3: #9C9485;
+  --border: rgba(184,150,90,0.15);
+  --border2: rgba(184,150,90,0.3);
+  --white: #FFFFFF;
+  --shadow: rgba(28,26,22,0.08);
+  --font-display: 'Cormorant Garamond', serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+  --sidebar: 260px;
+}
+
+html, body {
+  height: 100%;
+  background: var(--cream);
+  color: var(--text);
+  font-family: var(--font-body);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 3px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--cream3);
+  border-radius: 2px;
+}
+
+/* Price display utility — DM Sans 600, never Cormorant for numbers */
+.price-display {
+  font-family: var(--font-body);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.5s ease both;
+}
