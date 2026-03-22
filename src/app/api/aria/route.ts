@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     // Handle tool use loop (max 3 rounds to prevent infinite loops)
     let toolRounds = 0;
     const conversationMessages = [...formattedMessages];
-    let actionsTaken: string[] = [];
+    const actionsTaken: string[] = [];
 
     while (response.stop_reason === 'tool_use' && toolRounds < 3) {
       toolRounds++;
