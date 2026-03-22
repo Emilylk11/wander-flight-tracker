@@ -192,7 +192,7 @@ export default function Sidebar({ homeBase, userName, trips, wishlistCount, onHo
             return (
               <Link
                 key={trip.id}
-                href="/itinerary"
+                href={`/itinerary?trip=${trip.id}`}
                 className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer transition-all hover:bg-cream mb-1 no-underline"
               >
                 <div className={`w-2 h-2 rounded-full ${colors.dot} flex-shrink-0`} />

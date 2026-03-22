@@ -1,9 +1,10 @@
 import { createClient } from '@/lib/supabase/server';
 import ItineraryView from './ItineraryView';
 
-export default async function ItineraryPage() {
+export default async function ItineraryPage({ searchParams }: { searchParams: Promise<{ trip?: string }> }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+  const params = await searchParams;
 
   if (!user) {
     return (
@@ -24,16 +25,33 @@ export default async function ItineraryPage() {
     .eq('id', user.id)
     .single();
 
-  // Get the user's most recent non-completed trip
-  const { data: trips } = await supabase
-    .from('trips')
-    .select('*')
-    .eq('user_id', user.id)
-    .in('status', ['planning', 'upcoming', 'active'])
-    .order('created_at', { ascending: false })
-    .limit(1);
+  let trip = null;
 
-  if (!trips || trips.length === 0) {
+  // If a specific trip ID is provided, fetch that trip
+  if (params.trip) {
+    const { data } = await supabase
+      .from('trips')
+      .select('*')
+      .eq('id', params.trip)
+      .eq('user_id', user.id)
+      .single();
+    trip = data;
+  }
+
+  // Otherwise, get the most recent non-completed trip
+  if (!trip) {
+    const { data: trips } = await supabase
+      .from('trips')
+      .select('*')
+      .eq('user_id', user.id)
+      .in('status', ['planning', 'upcoming', 'active'])
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    trip = trips && trips.length > 0 ? trips[0] : null;
+  }
+
+  if (!trip) {
     return (
       <div className="flex items-center justify-center h-[60vh]">
         <div className="text-center">
@@ -46,8 +64,6 @@ export default async function ItineraryPage() {
       </div>
     );
   }
-
-  const trip = trips[0];
 
   const [destRes, itemsRes] = await Promise.all([
     supabase
