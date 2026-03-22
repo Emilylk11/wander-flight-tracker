@@ -20,6 +20,56 @@ type AirportSearchProps = {
   label?: string;
 };
 
+// Fallback airport database for when API is unavailable
+const commonAirports: Airport[] = [
+  { skyId: 'TUL', entityId: '95673329', iata: 'TUL', name: 'Tulsa International', city: 'Tulsa, Oklahoma', country: 'US' },
+  { skyId: 'JFK', entityId: '95565058', iata: 'JFK', name: 'John F. Kennedy International', city: 'New York, NY', country: 'US' },
+  { skyId: 'LAX', entityId: '95565059', iata: 'LAX', name: 'Los Angeles International', city: 'Los Angeles, CA', country: 'US' },
+  { skyId: 'ORD', entityId: '95565061', iata: 'ORD', name: "O'Hare International", city: 'Chicago, IL', country: 'US' },
+  { skyId: 'ATL', entityId: '95565040', iata: 'ATL', name: 'Hartsfield-Jackson International', city: 'Atlanta, GA', country: 'US' },
+  { skyId: 'DFW', entityId: '95565052', iata: 'DFW', name: 'Dallas/Fort Worth International', city: 'Dallas, TX', country: 'US' },
+  { skyId: 'DEN', entityId: '95565050', iata: 'DEN', name: 'Denver International', city: 'Denver, CO', country: 'US' },
+  { skyId: 'SFO', entityId: '95565071', iata: 'SFO', name: 'San Francisco International', city: 'San Francisco, CA', country: 'US' },
+  { skyId: 'SEA', entityId: '95565070', iata: 'SEA', name: 'Seattle-Tacoma International', city: 'Seattle, WA', country: 'US' },
+  { skyId: 'MIA', entityId: '95565064', iata: 'MIA', name: 'Miami International', city: 'Miami, FL', country: 'US' },
+  { skyId: 'BOS', entityId: '95565045', iata: 'BOS', name: 'Logan International', city: 'Boston, MA', country: 'US' },
+  { skyId: 'EWR', entityId: '95565055', iata: 'EWR', name: 'Newark Liberty International', city: 'Newark, NJ', country: 'US' },
+  { skyId: 'MCO', entityId: '95565063', iata: 'MCO', name: 'Orlando International', city: 'Orlando, FL', country: 'US' },
+  { skyId: 'LAS', entityId: '95565060', iata: 'LAS', name: 'Harry Reid International', city: 'Las Vegas, NV', country: 'US' },
+  { skyId: 'MSP', entityId: '95673459', iata: 'MSP', name: 'Minneapolis-Saint Paul International', city: 'Minneapolis, MN', country: 'US' },
+  { skyId: 'DTW', entityId: '95565053', iata: 'DTW', name: 'Detroit Metropolitan', city: 'Detroit, MI', country: 'US' },
+  { skyId: 'PHX', entityId: '95565067', iata: 'PHX', name: 'Phoenix Sky Harbor', city: 'Phoenix, AZ', country: 'US' },
+  { skyId: 'IAH', entityId: '95565057', iata: 'IAH', name: 'George Bush Intercontinental', city: 'Houston, TX', country: 'US' },
+  { skyId: 'CLT', entityId: '95565047', iata: 'CLT', name: 'Charlotte Douglas International', city: 'Charlotte, NC', country: 'US' },
+  { skyId: 'NRT', entityId: '95565066', iata: 'NRT', name: 'Narita International', city: 'Tokyo, Japan', country: 'JP' },
+  { skyId: 'CDG', entityId: '95565046', iata: 'CDG', name: 'Charles de Gaulle', city: 'Paris, France', country: 'FR' },
+  { skyId: 'LHR', entityId: '95565062', iata: 'LHR', name: 'Heathrow', city: 'London, UK', country: 'GB' },
+  { skyId: 'FCO', entityId: '95565056', iata: 'FCO', name: 'Leonardo da Vinci–Fiumicino', city: 'Rome, Italy', country: 'IT' },
+  { skyId: 'BCN', entityId: '95565043', iata: 'BCN', name: 'Barcelona–El Prat', city: 'Barcelona, Spain', country: 'ES' },
+  { skyId: 'DPS', entityId: '95565051', iata: 'DPS', name: 'Ngurah Rai International', city: 'Bali, Indonesia', country: 'ID' },
+  { skyId: 'BKK', entityId: '95565044', iata: 'BKK', name: 'Suvarnabhumi', city: 'Bangkok, Thailand', country: 'TH' },
+  { skyId: 'IST', entityId: '95565001', iata: 'IST', name: 'Istanbul Airport', city: 'Istanbul, Turkey', country: 'TR' },
+  { skyId: 'DXB', entityId: '95565054', iata: 'DXB', name: 'Dubai International', city: 'Dubai, UAE', country: 'AE' },
+  { skyId: 'SYD', entityId: '95565072', iata: 'SYD', name: 'Sydney Airport', city: 'Sydney, Australia', country: 'AU' },
+  { skyId: 'CUN', entityId: '95565048', iata: 'CUN', name: 'Cancún International', city: 'Cancún, Mexico', country: 'MX' },
+  { skyId: 'LIS', entityId: '95565002', iata: 'LIS', name: 'Lisbon Portela', city: 'Lisbon, Portugal', country: 'PT' },
+  { skyId: 'AMS', entityId: '95565041', iata: 'AMS', name: 'Amsterdam Schiphol', city: 'Amsterdam, Netherlands', country: 'NL' },
+  { skyId: 'FRA', entityId: '95565003', iata: 'FRA', name: 'Frankfurt Airport', city: 'Frankfurt, Germany', country: 'DE' },
+  { skyId: 'ICN', entityId: '95565004', iata: 'ICN', name: 'Incheon International', city: 'Seoul, South Korea', country: 'KR' },
+  { skyId: 'SIN', entityId: '95565005', iata: 'SIN', name: 'Changi Airport', city: 'Singapore', country: 'SG' },
+  { skyId: 'HND', entityId: '95565006', iata: 'HND', name: 'Haneda Airport', city: 'Tokyo, Japan', country: 'JP' },
+];
+
+function localSearch(query: string): Airport[] {
+  const q = query.toLowerCase();
+  return commonAirports.filter(a =>
+    a.iata.toLowerCase().includes(q) ||
+    a.name.toLowerCase().includes(q) ||
+    a.city.toLowerCase().includes(q) ||
+    a.country.toLowerCase().includes(q)
+  ).slice(0, 6);
+}
+
 export default function AirportSearch({ value, onSelect, placeholder = 'Search city or airport...', label }: AirportSearchProps) {
   const [query, setQuery] = useState(value);
   const [results, setResults] = useState<Airport[]>([]);
@@ -85,10 +135,20 @@ export default function AirportSearch({ value, onSelect, placeholder = 'Search c
         const data = await res.json();
 
         const airports = parseAirports(data);
-        setResults(airports);
-        setShowDropdown(airports.length > 0);
+        if (airports.length > 0) {
+          setResults(airports);
+          setShowDropdown(true);
+        } else {
+          // Fallback to local search
+          const local = localSearch(val);
+          setResults(local);
+          setShowDropdown(local.length > 0);
+        }
       } catch {
-        setResults([]);
+        // API failed — use local search
+        const local = localSearch(val);
+        setResults(local);
+        setShowDropdown(local.length > 0);
       } finally {
         setLoading(false);
       }

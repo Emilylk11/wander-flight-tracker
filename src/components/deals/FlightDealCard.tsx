@@ -9,9 +9,17 @@ const badgeStyles = {
 };
 
 function buildGoogleFlightsUrl(deal: FlightDeal): string {
-  const params = new URLSearchParams();
-  if (deal.originCode) params.set('q', `flights from ${deal.originCode} to ${deal.destinationCode || deal.destination}`);
-  return `https://www.google.com/travel/flights?${params.toString()}`;
+  // Use Skyscanner for more reliable deep-linking with airport codes
+  if (deal.originCode && deal.destinationCode && deal.departureDate) {
+    const depDate = deal.departureDate.replace(/-/g, '');
+    const retDate = deal.returnDate ? deal.returnDate.replace(/-/g, '') : '';
+    if (retDate) {
+      return `https://www.skyscanner.com/transport/flights/${deal.originCode.toLowerCase()}/${deal.destinationCode.toLowerCase()}/${depDate}/${retDate}/`;
+    }
+    return `https://www.skyscanner.com/transport/flights/${deal.originCode.toLowerCase()}/${deal.destinationCode.toLowerCase()}/${depDate}/`;
+  }
+  // Fallback: Google Flights search
+  return `https://www.google.com/travel/flights?q=flights+from+${deal.originCode}+to+${deal.destinationCode || deal.destination}`;
 }
 
 export default function FlightDealCard({ deal }: { deal: FlightDeal }) {
