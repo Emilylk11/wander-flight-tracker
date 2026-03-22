@@ -75,7 +75,7 @@ export default function VisaPage() {
           .filter(Boolean) as string[];
 
         if (countries.length > 0) {
-          setTripCountries([...new Set(countries)]);
+          setTripCountries(Array.from(new Set(countries)));
           // Fetch weather for destination cities
           const cities = destinations.map((d: { city: string }) => d.city).filter(Boolean);
           if (cities.length > 0) {
