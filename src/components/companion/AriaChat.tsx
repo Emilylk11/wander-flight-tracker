@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import MessageBubble from './MessageBubble';
 
 type Message = {
@@ -13,6 +13,7 @@ type AriaChatProps = {
   homeAirport?: string;
   trips?: { name: string; dates: string; destinations: string[] }[];
   wishlist?: { destination: string; targetDate: string; lastPrice: number }[];
+  savedMessages?: Message[];
 };
 
 export default function AriaChat({
@@ -20,14 +21,17 @@ export default function AriaChat({
   homeAirport = 'TUL — Tulsa, OK',
   trips = [],
   wishlist = [],
+  savedMessages = [],
 }: AriaChatProps) {
   const greeting = trips.length > 0
     ? `Hi ${userName}! I'm ARIA, your travel companion. I can see you have ${trips.length} trip${trips.length > 1 ? 's' : ''} planned. Ask me anything about destinations, budgets, or logistics — I'm here to help! ✈️`
     : `Hi ${userName}! I'm ARIA, your intelligent travel companion. Ask me anything about planning trips, finding deals, or exploring destinations. Let's start your next adventure! 🌍`;
 
-  const [messages, setMessages] = useState<Message[]>([
-    { role: 'assistant', content: greeting },
-  ]);
+  const initialMessages: Message[] = savedMessages.length > 0
+    ? savedMessages
+    : [{ role: 'assistant', content: greeting }];
+
+  const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -40,6 +44,21 @@ export default function AriaChat({
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Save messages to Supabase whenever they change (debounced)
+  const saveMessages = useCallback(async (msgs: Message[]) => {
+    // Only save after the first message exchange (skip initial greeting)
+    if (msgs.length <= 1) return;
+    try {
+      await fetch('/api/aria/history', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: msgs }),
+      });
+    } catch {
+      // Silent fail — don't interrupt chat
+    }
+  }, []);
 
   async function handleSend() {
     const text = input.trim();
@@ -85,6 +104,10 @@ export default function AriaChat({
           return updated;
         });
       }
+
+      // Save the complete conversation after assistant finishes
+      const finalMessages = [...newMessages, { role: 'assistant' as const, content: assistantContent }];
+      saveMessages(finalMessages);
     } catch {
       setMessages((prev) => [
         ...prev,
@@ -99,13 +122,23 @@ export default function AriaChat({
     }
   }
 
+  async function handleClearChat() {
+    const freshMessages: Message[] = [{ role: 'assistant', content: greeting }];
+    setMessages(freshMessages);
+    try {
+      await fetch('/api/aria/history', { method: 'DELETE' });
+    } catch {
+      // Silent fail
+    }
+  }
+
   return (
-    <div className="bg-white border border-wborder rounded-card overflow-hidden flex flex-col h-[360px]">
-      <div className="px-[18px] py-3.5 border-b border-wborder flex items-center gap-2.5 flex-shrink-0">
+    <div className="bg-white border border-wborder rounded-card overflow-hidden flex flex-col" style={{ height: 'calc(100vh - 180px)', minHeight: '360px' }}>
+      <div className="px-3 sm:px-[18px] py-3 sm:py-3.5 border-b border-wborder flex items-center gap-2.5 flex-shrink-0">
         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gold-3 to-gold flex items-center justify-center text-sm">
           ✦
         </div>
-        <div>
+        <div className="flex-1 min-w-0">
           <div className="text-[13px] font-medium text-wtext">
             ARIA — Your Travel Companion
           </div>
@@ -114,19 +147,34 @@ export default function AriaChat({
             Online · knows your trips
           </div>
         </div>
+        {messages.length > 1 && (
+          <button
+            onClick={handleClearChat}
+            className="text-[10px] text-wtext-3 hover:text-wtext border border-wborder rounded-md px-2 py-1 cursor-pointer bg-transparent transition-colors"
+          >
+            Clear chat
+          </button>
+        )}
       </div>
 
       <div
         ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto px-4 py-3.5 flex flex-col gap-2.5"
+        className="flex-1 overflow-y-auto px-3 sm:px-4 py-3 sm:py-3.5 flex flex-col gap-2.5"
       >
         {messages.map((msg, i) => (
           <MessageBubble key={i} role={msg.role} content={msg.content} userName={userName.slice(0, 1)} />
         ))}
+        {isStreaming && messages[messages.length - 1]?.content === '' && (
+          <div className="flex items-center gap-1 px-3 py-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
+            <div className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" style={{ animationDelay: '0.2s' }} />
+            <div className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" style={{ animationDelay: '0.4s' }} />
+          </div>
+        )}
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="px-3.5 py-2.5 border-t border-wborder flex gap-2 flex-shrink-0">
+      <div className="px-2.5 sm:px-3.5 py-2 sm:py-2.5 border-t border-wborder flex gap-2 flex-shrink-0">
         <input
           type="text"
           value={input}

@@ -11,12 +11,14 @@ export default async function CompanionPage() {
   let homeAirport = 'TUL — Tulsa, OK';
   let trips: { name: string; dates: string; destinations: string[] }[] = [];
   let wishlist: { destination: string; targetDate: string; lastPrice: number }[] = [];
+  let savedMessages: { role: 'user' | 'assistant'; content: string }[] = [];
 
   if (user) {
-    const [profileRes, tripsRes, wishlistRes] = await Promise.all([
+    const [profileRes, tripsRes, wishlistRes, historyRes] = await Promise.all([
       supabase.from('profiles').select('*').eq('id', user.id).single(),
       supabase.from('trips').select('*, trip_destinations(city)').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5),
       supabase.from('wishlist').select('*').eq('user_id', user.id).limit(10),
+      supabase.from('aria_conversations').select('role, content').eq('user_id', user.id).order('created_at', { ascending: true }).limit(50),
     ]);
 
     if (profileRes.data) {
@@ -39,6 +41,13 @@ export default async function CompanionPage() {
         lastPrice: w.last_seen_price || 0,
       }));
     }
+
+    if (historyRes.data && historyRes.data.length > 0) {
+      savedMessages = historyRes.data.map((m: any) => ({
+        role: m.role as 'user' | 'assistant',
+        content: m.content,
+      }));
+    }
   }
 
   return (
@@ -48,6 +57,7 @@ export default async function CompanionPage() {
         homeAirport={homeAirport}
         trips={trips}
         wishlist={wishlist}
+        savedMessages={savedMessages}
       />
     </div>
   );
