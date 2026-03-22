@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server';
 import AriaChat from '@/components/companion/AriaChat';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 export default async function CompanionPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -23,18 +25,18 @@ export default async function CompanionPage() {
     }
 
     if (tripsRes.data) {
-      trips = tripsRes.data.map((t: Record<string, unknown>) => ({
-        name: t.name as string,
+      trips = tripsRes.data.map((t: any) => ({
+        name: t.name,
         dates: t.start_date && t.end_date ? `${t.start_date} — ${t.end_date}` : 'Dates TBD',
-        destinations: ((t.trip_destinations as Record<string, unknown>[] | null) || []).map((d: Record<string, unknown>) => d.city as string),
+        destinations: (t.trip_destinations || []).map((d: any) => d.city),
       }));
     }
 
     if (wishlistRes.data) {
-      wishlist = wishlistRes.data.map((w: Record<string, unknown>) => ({
-        destination: w.destination as string,
+      wishlist = wishlistRes.data.map((w: any) => ({
+        destination: w.destination,
         targetDate: w.target_month && w.target_year ? `${w.target_month} ${w.target_year}` : '',
-        lastPrice: (w.last_seen_price as number) || 0,
+        lastPrice: w.last_seen_price || 0,
       }));
     }
   }

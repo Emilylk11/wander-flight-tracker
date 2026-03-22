@@ -1,12 +1,13 @@
 import { createClient } from '@/lib/supabase/server';
 import AppShell from '@/components/layout/AppShell';
+import type { Trip } from '@/types/supabase';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   let profile = null;
-  let trips: Record<string, unknown>[] = [];
+  let trips: Trip[] = [];
   let wishlistCount = 0;
 
   if (user) {
@@ -16,7 +17,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       supabase.from('wishlist').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
     ]);
     profile = profileRes.data;
-    trips = tripsRes.data || [];
+    trips = (tripsRes.data || []) as Trip[];
     wishlistCount = wishlistRes.count || 0;
   }
 
