@@ -1,14 +1,15 @@
-const BASE_URL = 'https://sky-scrapper.p.rapidapi.com';
-const HEADERS = {
-  'X-RapidAPI-Key': process.env.RAPIDAPI_KEY!,
-  'X-RapidAPI-Host': 'sky-scrapper.p.rapidapi.com',
+const BASE_URL = 'https://flights-sky.p.rapidapi.com';
+const HEADERS: Record<string, string> = {
+  'x-rapidapi-key': process.env.RAPIDAPI_KEY!,
+  'x-rapidapi-host': 'flights-sky.p.rapidapi.com',
+  'Content-Type': 'application/json',
 };
 
 // Step 1: Convert city/airport name to skyId + entityId
 export async function searchAirport(query: string) {
   const res = await fetch(
-    `${BASE_URL}/api/v1/flights/searchAirport?query=${encodeURIComponent(query)}&locale=en-US`,
-    { headers: HEADERS, next: { revalidate: 3600 } } // cache airport lookups 1hr
+    `${BASE_URL}/flights/searchAirport?query=${encodeURIComponent(query)}&locale=en-US`,
+    { headers: HEADERS, next: { revalidate: 3600 } }
   );
   if (!res.ok) throw new Error('Airport search failed');
   return res.json();
@@ -20,9 +21,9 @@ export async function searchFlights(params: {
   destinationSkyId: string;
   originEntityId: string;
   destinationEntityId: string;
-  date: string; // YYYY-MM-DD
-  returnDate?: string; // YYYY-MM-DD for round trip
-  cabinClass?: string; // economy | business | first
+  date: string;
+  returnDate?: string;
+  cabinClass?: string;
   adults?: number;
 }) {
   const query = new URLSearchParams({
@@ -40,7 +41,7 @@ export async function searchFlights(params: {
     countryCode: 'US',
   });
 
-  const res = await fetch(`${BASE_URL}/api/v1/flights/searchFlights?${query}`, {
+  const res = await fetch(`${BASE_URL}/flights/searchFlights?${query}`, {
     headers: HEADERS,
   });
   if (!res.ok) throw new Error('Flight search failed');
@@ -50,7 +51,7 @@ export async function searchFlights(params: {
 // Step 3: Find deals from home airport (flights everywhere)
 export async function searchFlightsEverywhere(originEntityId: string) {
   const res = await fetch(
-    `${BASE_URL}/api/v1/flights/searchFlightsEverywhere?fromEntityId=${originEntityId}&cabinClass=economy&adults=1&currency=USD&market=en-US&countryCode=US`,
+    `${BASE_URL}/flights/search-everywhere?fromEntityId=${originEntityId}&type=oneway&currency=USD&market=en-US&countryCode=US`,
     { headers: HEADERS }
   );
   if (!res.ok) throw new Error('Flights everywhere search failed');
@@ -64,7 +65,7 @@ export async function getPriceCalendar(
   fromDate: string
 ) {
   const res = await fetch(
-    `${BASE_URL}/api/v1/flights/getPriceCalendar?originSkyId=${originSkyId}&destinationSkyId=${destinationSkyId}&fromDate=${fromDate}&currency=USD`,
+    `${BASE_URL}/flights/getPriceCalendar?originSkyId=${originSkyId}&destinationSkyId=${destinationSkyId}&fromDate=${fromDate}&currency=USD`,
     { headers: HEADERS, next: { revalidate: 3600 } }
   );
   if (!res.ok) throw new Error('Price calendar failed');

@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     // Sky Scrapper calls always save to price history
     try {
       const supabase = await createClient();
-      const results = data?.data?.results || data?.data?.everywhere || [];
+      const results = data?.data?.results || data?.data?.everywhere || data?.data?.everywhereDestination?.results || data?.results || [];
 
       if (Array.isArray(results)) {
         const today = new Date().toISOString().split('T')[0];
@@ -28,13 +28,19 @@ export async function GET(request: NextRequest) {
         for (const result of results.slice(0, 10)) {
           const destCode =
             result?.content?.location?.skyCode ||
+            result?.location?.skyCode ||
+            result?.location?.skyId ||
+            result?.skyId ||
             result?.destinationSkyId ||
             result?.id ||
             '';
           const price =
             result?.content?.flightQuotes?.cheapest?.price ||
+            result?.flightQuotes?.cheapest?.price ||
+            result?.cheapest?.price ||
             result?.price?.raw ||
             result?.rawPrice ||
+            result?.price ||
             0;
 
           if (destCode && price > 0) {

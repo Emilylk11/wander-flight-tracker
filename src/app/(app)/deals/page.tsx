@@ -35,18 +35,20 @@ export default function DealsPage() {
         if (!res.ok) throw new Error('API failed');
 
         const data = await res.json();
-        const results = data?.data?.results || data?.data?.everywhere || [];
+        // Handle multiple possible response structures from different API versions
+        const results = data?.data?.results || data?.data?.everywhere || data?.data?.everywhereDestination?.results || data?.results || [];
 
         if (Array.isArray(results) && results.length > 0) {
           const parsed: FlightDeal[] = results.slice(0, 8).map((r: Record<string, unknown>, i: number) => {
+            // Try Flights Scraper Sky format first, then Sky Scrapper format
             const content = r?.content as Record<string, unknown> | undefined;
-            const location = content?.location as Record<string, unknown> | undefined;
-            const quotes = content?.flightQuotes as Record<string, unknown> | undefined;
-            const cheapest = quotes?.cheapest as Record<string, unknown> | undefined;
+            const location = (content?.location || r?.location) as Record<string, unknown> | undefined;
+            const quotes = (content?.flightQuotes || r?.flightQuotes) as Record<string, unknown> | undefined;
+            const cheapest = (quotes?.cheapest || r?.cheapest) as Record<string, unknown> | undefined;
 
-            const destCode = (location?.skyCode as string) || '';
-            const destName = (location?.name as string) || destCode;
-            const price = (cheapest?.price as number) || 0;
+            const destCode = (location?.skyCode as string) || (location?.skyId as string) || (r?.skyId as string) || (r?.entityId as string) || '';
+            const destName = (location?.name as string) || (r?.name as string) || (r?.city as string) || destCode;
+            const price = (cheapest?.price as number) || (cheapest?.rawPrice as number) || (r?.price as number) || (r?.rawPrice as number) || 0;
 
             // Estimate avg price as 30% above cheapest for classification
             const estimatedAvg = price * 1.3;
