@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 
 const airports = [
   { city: 'Tulsa, Oklahoma', code: 'TUL', full: 'Tulsa Int\'l Airport', flag: '🇺🇸', entityId: '95673329' },
@@ -15,7 +16,34 @@ type HomeBaseModalProps = {
 };
 
 export default function HomeBaseModal({ isOpen, onClose, onSelect }: HomeBaseModalProps) {
+  const router = useRouter();
+
   if (!isOpen) return null;
+
+  async function handleSelect(apt: typeof airports[0]) {
+    const displayCity = apt.city.includes(',')
+      ? apt.city.split(',')[0].trim() + ', ' + apt.city.split(',')[1].trim().slice(0, 2).toUpperCase()
+      : apt.city;
+
+    onSelect(`${displayCity} — ${apt.code}`, apt.code, apt.entityId);
+    onClose();
+
+    // Persist to database
+    try {
+      await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          home_airport_code: apt.code,
+          home_airport_name: displayCity,
+          home_entity_id: apt.entityId,
+        }),
+      });
+      router.refresh();
+    } catch {
+      // Local state already updated, DB sync is best-effort
+    }
+  }
 
   return (
     <div
@@ -37,13 +65,7 @@ export default function HomeBaseModal({ isOpen, onClose, onSelect }: HomeBaseMod
           {airports.map((apt) => (
             <button
               key={apt.code}
-              onClick={() => {
-                const displayCity = apt.city.includes(',')
-                  ? apt.city.split(',')[0].trim() + ', ' + apt.city.split(',')[1].trim().slice(0, 2).toUpperCase()
-                  : apt.city;
-                onSelect(`${displayCity} — ${apt.code}`, apt.code, apt.entityId);
-                onClose();
-              }}
+              onClick={() => handleSelect(apt)}
               className="flex items-center gap-2.5 p-3 border border-wborder rounded-[10px] cursor-pointer transition-all hover:border-gold hover:bg-[rgba(184,150,90,0.04)] text-left"
             >
               <span className="text-xl">{apt.flag}</span>

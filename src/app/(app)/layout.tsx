@@ -1,66 +1,28 @@
-'use client';
+import { createClient } from '@/lib/supabase/server';
+import AppShell from '@/components/layout/AppShell';
 
-import { useState } from 'react';
-import { usePathname } from 'next/navigation';
-import Sidebar from '@/components/layout/Sidebar';
-import Topbar from '@/components/layout/Topbar';
-import MobileNav from '@/components/layout/MobileNav';
-import HomeBaseModal from '@/components/layout/HomeBaseModal';
-import SetAlertModal from '@/components/layout/SetAlertModal';
-import NewTripModal from '@/components/layout/NewTripModal';
+export default async function AppLayout({ children }: { children: React.ReactNode }) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const [homeBase, setHomeBase] = useState('Tulsa, OK — TUL');
-  const [showHomeBaseModal, setShowHomeBaseModal] = useState(false);
-  const [showAlertModal, setShowAlertModal] = useState(false);
-  const [showNewTripModal, setShowNewTripModal] = useState(false);
+  let profile = null;
+  let trips: any[] = [];
+  let wishlistCount = 0;
 
-  function handleHomeBaseSelect(display: string, code: string, entityId: string) {
-    setHomeBase(display);
-    console.log('Home base updated:', code, entityId);
+  if (user) {
+    const [profileRes, tripsRes, wishlistRes] = await Promise.all([
+      supabase.from('profiles').select('*').eq('id', user.id).single(),
+      supabase.from('trips').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
+      supabase.from('wishlist').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+    ]);
+    profile = profileRes.data;
+    trips = tripsRes.data || [];
+    wishlistCount = wishlistRes.count || 0;
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      {/* Sidebar: hidden on mobile */}
-      <div className="hidden md:block">
-        <Sidebar
-          homeBase={homeBase}
-          userName="Emily M."
-          onHomeBaseClick={() => setShowHomeBaseModal(true)}
-        />
-      </div>
-
-      <main className="flex-1 flex flex-col overflow-hidden bg-cream">
-        <Topbar
-          pathname={pathname}
-          onSetAlert={() => setShowAlertModal(true)}
-          onNewTrip={() => setShowNewTripModal(true)}
-        />
-        {/* Content area: extra bottom padding on mobile for tab bar */}
-        <div className="flex-1 overflow-y-auto px-4 py-5 md:px-8 md:py-7 pb-20 md:pb-7">
-          {children}
-        </div>
-      </main>
-
-      {/* Mobile bottom nav */}
-      <MobileNav />
-
-      {/* Modals */}
-      <HomeBaseModal
-        isOpen={showHomeBaseModal}
-        onClose={() => setShowHomeBaseModal(false)}
-        onSelect={handleHomeBaseSelect}
-      />
-      <SetAlertModal
-        isOpen={showAlertModal}
-        onClose={() => setShowAlertModal(false)}
-      />
-      <NewTripModal
-        isOpen={showNewTripModal}
-        onClose={() => setShowNewTripModal(false)}
-      />
-    </div>
+    <AppShell profile={profile} trips={trips} wishlistCount={wishlistCount}>
+      {children}
+    </AppShell>
   );
 }

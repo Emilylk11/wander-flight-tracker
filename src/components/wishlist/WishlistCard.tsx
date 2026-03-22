@@ -6,6 +6,7 @@ type WishlistCardProps = {
   gradient: string;
   badge?: string;
   badgeStyle?: 'saved' | 'pricedrop';
+  onRemove?: () => void;
 };
 
 export default function WishlistCard({
@@ -16,9 +17,10 @@ export default function WishlistCard({
   gradient,
   badge,
   badgeStyle = 'saved',
+  onRemove,
 }: WishlistCardProps) {
   return (
-    <div className="rounded-xl overflow-hidden cursor-pointer relative h-[140px] transition-transform hover:-translate-y-[2px]">
+    <div className="rounded-xl overflow-hidden cursor-pointer relative h-[140px] transition-transform hover:-translate-y-[2px] group">
       {/* Background with emoji */}
       <div
         className="w-full h-full flex items-center justify-center text-[40px]"
@@ -33,7 +35,7 @@ export default function WishlistCard({
           {destination}
         </div>
         <div className="text-[10px] text-white/80 mt-[1px]">
-          from ${price.toLocaleString()} rt · {dateLabel}
+          {price > 0 ? `from $${price.toLocaleString()} rt` : ''}{dateLabel ? ` · ${dateLabel}` : ''}
         </div>
       </div>
 
@@ -48,6 +50,17 @@ export default function WishlistCard({
         >
           {badge}
         </div>
+      )}
+
+      {/* Remove button — appears on hover */}
+      {onRemove && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onRemove(); }}
+          className="absolute top-2 left-2 w-6 h-6 rounded-full bg-black/40 backdrop-blur-sm text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hover:bg-black/60"
+          title="Remove from wishlist"
+        >
+          ✕
+        </button>
       )}
     </div>
   );

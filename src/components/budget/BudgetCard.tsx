@@ -16,6 +16,7 @@ type BudgetCardProps = {
   total: number;
   categories: CategoryRow[];
   isEmpty?: boolean;
+  onAddExpense?: () => void;
 };
 
 export default function BudgetCard({
@@ -25,6 +26,7 @@ export default function BudgetCard({
   total,
   categories,
   isEmpty = false,
+  onAddExpense,
 }: BudgetCardProps) {
   const percentage = total > 0 ? Math.round((spent / total) * 100) : 0;
   const remaining = total - spent;
@@ -103,7 +105,10 @@ export default function BudgetCard({
         )}
 
         {isEmpty && (
-          <button className="w-full py-2.5 rounded-lg bg-gradient-to-br from-gold to-gold-2 text-xs text-white font-medium font-body transition-all hover:opacity-90 hover:-translate-y-px flex items-center justify-center gap-1.5 cursor-pointer">
+          <button
+            onClick={onAddExpense}
+            className="w-full py-2.5 rounded-lg bg-gradient-to-br from-gold to-gold-2 text-xs text-white font-medium font-body transition-all hover:opacity-90 hover:-translate-y-px flex items-center justify-center gap-1.5 cursor-pointer"
+          >
             + Add Expense
           </button>
         )}

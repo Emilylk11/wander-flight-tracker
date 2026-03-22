@@ -3,32 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { NavBadge } from '@/components/ui/Badge';
-
-const navSections = [
-  {
-    label: 'Explore',
-    items: [
-      { name: 'Flight Deals', href: '/deals', badge: '4', badgeVariant: 'gold' as const },
-      { name: 'Discover', href: '/discover' },
-    ],
-  },
-  {
-    label: 'My Trips',
-    items: [
-      { name: 'Itinerary', href: '/itinerary' },
-      { name: 'Budget', href: '/budget' },
-      { name: 'Hotels', href: '/hotels' },
-      { name: 'Visa & Entry', href: '/visa' },
-      { name: 'AI Companion', href: '/companion' },
-    ],
-  },
-  {
-    label: 'Saved',
-    items: [
-      { name: 'My Wishlist', href: '/wishlist', badge: '6', badgeVariant: 'subtle' as const },
-    ],
-  },
-];
+import type { Trip } from '@/types/supabase';
 
 const navIcons: Record<string, React.ReactNode> = {
   '/deals': (
@@ -76,10 +51,25 @@ const navIcons: Record<string, React.ReactNode> = {
 type SidebarProps = {
   homeBase: string;
   userName: string;
+  trips: Trip[];
+  wishlistCount: number;
   onHomeBaseClick: () => void;
 };
 
-export default function Sidebar({ homeBase, userName, onHomeBaseClick }: SidebarProps) {
+const statusColors: Record<string, { dot: string; bg: string; text: string }> = {
+  planning: { dot: 'bg-gold', bg: 'bg-[rgba(184,150,90,0.12)]', text: 'text-gold-3' },
+  upcoming: { dot: 'bg-[#3C7850]', bg: 'bg-[rgba(60,120,80,0.1)]', text: 'text-[#3C7850]' },
+  active: { dot: 'bg-[#2D6BCB]', bg: 'bg-[rgba(45,107,203,0.1)]', text: 'text-[#2D6BCB]' },
+  completed: { dot: 'bg-wtext-3', bg: 'bg-cream-2', text: 'text-wtext-3' },
+};
+
+function formatDate(dateStr: string | null) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+export default function Sidebar({ homeBase, userName, trips, wishlistCount, onHomeBaseClick }: SidebarProps) {
   const pathname = usePathname();
 
   const initials = userName
@@ -89,9 +79,36 @@ export default function Sidebar({ homeBase, userName, onHomeBaseClick }: Sidebar
     .toUpperCase()
     .slice(0, 2);
 
+  const navSections = [
+    {
+      label: 'Explore',
+      items: [
+        { name: 'Flight Deals', href: '/deals' },
+        { name: 'Discover', href: '/discover' },
+      ],
+    },
+    {
+      label: 'My Trips',
+      items: [
+        { name: 'Itinerary', href: '/itinerary' },
+        { name: 'Budget', href: '/budget' },
+        { name: 'Hotels', href: '/hotels' },
+        { name: 'Visa & Entry', href: '/visa' },
+        { name: 'AI Companion', href: '/companion' },
+      ],
+    },
+    {
+      label: 'Saved',
+      items: [
+        { name: 'My Wishlist', href: '/wishlist', badge: wishlistCount > 0 ? String(wishlistCount) : undefined, badgeVariant: 'subtle' as const },
+      ],
+    },
+  ];
+
+  const activeTrips = trips.filter(t => t.status !== 'completed');
+
   return (
     <aside className="w-sidebar flex-shrink-0 bg-white border-r border-wborder flex flex-col relative overflow-hidden">
-      {/* Subtle gold gradient at top */}
       <div className="absolute top-0 left-0 right-0 h-[180px] bg-gradient-to-b from-[rgba(184,150,90,0.05)] to-transparent pointer-events-none" />
 
       {/* Logo */}
@@ -145,7 +162,7 @@ export default function Sidebar({ homeBase, userName, onHomeBaseClick }: Sidebar
                 >
                   {navIcons[item.href]}
                   {item.name}
-                  {item.badge && (
+                  {'badge' in item && item.badge && (
                     <NavBadge variant={item.badgeVariant || 'gold'}>
                       {item.badge}
                     </NavBadge>
@@ -162,29 +179,34 @@ export default function Sidebar({ homeBase, userName, onHomeBaseClick }: Sidebar
         <div className="text-[9px] tracking-[0.12em] uppercase text-wtext-3 mb-2.5 font-medium">
           Active Trips
         </div>
-        <Link
-          href="/itinerary"
-          className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer transition-all hover:bg-cream mb-1 no-underline"
-        >
-          <div className="w-2 h-2 rounded-full bg-gold flex-shrink-0" />
-          <div>
-            <div className="text-xs font-medium text-wtext">Europe Summer</div>
-            <div className="text-[10px] text-wtext-3">Jun 12 — Jul 3, 2026</div>
+        {activeTrips.length === 0 ? (
+          <div className="text-xs text-wtext-3 px-2.5 py-3 text-center">
+            No trips yet — click <span className="text-gold font-medium">+ New Trip</span> to start
           </div>
-          <span className="ml-auto text-[9px] px-[7px] py-[2px] rounded-full font-medium bg-[rgba(184,150,90,0.12)] text-gold-3">
-            Planning
-          </span>
-        </Link>
-        <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer transition-all hover:bg-cream">
-          <div className="w-2 h-2 rounded-full bg-[#3C7850] flex-shrink-0" />
-          <div>
-            <div className="text-xs font-medium text-wtext">Bali Retreat</div>
-            <div className="text-[10px] text-wtext-3">Sep 8 — Sep 22, 2026</div>
-          </div>
-          <span className="ml-auto text-[9px] px-[7px] py-[2px] rounded-full font-medium bg-[rgba(60,120,80,0.1)] text-[#3C7850]">
-            Upcoming
-          </span>
-        </div>
+        ) : (
+          activeTrips.slice(0, 4).map((trip) => {
+            const colors = statusColors[trip.status] || statusColors.planning;
+            const dateRange = trip.start_date && trip.end_date
+              ? `${formatDate(trip.start_date)} — ${formatDate(trip.end_date)}`
+              : 'Dates TBD';
+            return (
+              <Link
+                key={trip.id}
+                href="/itinerary"
+                className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer transition-all hover:bg-cream mb-1 no-underline"
+              >
+                <div className={`w-2 h-2 rounded-full ${colors.dot} flex-shrink-0`} />
+                <div className="min-w-0">
+                  <div className="text-xs font-medium text-wtext truncate">{trip.name}</div>
+                  <div className="text-[10px] text-wtext-3">{dateRange}</div>
+                </div>
+                <span className={`ml-auto text-[9px] px-[7px] py-[2px] rounded-full font-medium ${colors.bg} ${colors.text} capitalize flex-shrink-0`}>
+                  {trip.status}
+                </span>
+              </Link>
+            );
+          })
+        )}
       </div>
 
       {/* User Bar */}

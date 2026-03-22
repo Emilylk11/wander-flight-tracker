@@ -14,19 +14,42 @@ export default function NewTripModal({ isOpen, onClose }: NewTripModalProps) {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [destination, setDestination] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   if (!isOpen) return null;
 
-  function handleCreate() {
+  async function handleCreate() {
     if (!name) return;
-    // TODO: Create trip in Supabase and redirect
-    console.log('Creating trip:', { name, startDate, endDate, destination });
-    onClose();
-    setName('');
-    setStartDate('');
-    setEndDate('');
-    setDestination('');
-    router.push('/itinerary');
+    setLoading(true);
+    setError('');
+
+    try {
+      const res = await fetch('/api/trips', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          start_date: startDate || null,
+          end_date: endDate || null,
+          destination: destination || null,
+        }),
+      });
+
+      if (!res.ok) throw new Error('Failed to create trip');
+
+      onClose();
+      setName('');
+      setStartDate('');
+      setEndDate('');
+      setDestination('');
+      router.refresh();
+      router.push('/itinerary');
+    } catch {
+      setError('Failed to create trip. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -42,6 +65,10 @@ export default function NewTripModal({ isOpen, onClose }: NewTripModalProps) {
         <div className="text-xs text-wtext-3 mb-5">
           Start planning your next adventure.
         </div>
+
+        {error && (
+          <div className="bg-red-50 text-red-600 text-xs p-2.5 rounded-lg mb-3">{error}</div>
+        )}
 
         <div className="flex flex-col gap-3.5">
           <div>
@@ -94,10 +121,10 @@ export default function NewTripModal({ isOpen, onClose }: NewTripModalProps) {
           </div>
           <button
             onClick={handleCreate}
-            disabled={!name}
+            disabled={!name || loading}
             className="w-full py-2.5 rounded-lg bg-gradient-to-br from-gold to-gold-2 text-sm text-white font-medium font-body transition-all hover:opacity-90 hover:-translate-y-px disabled:opacity-40 cursor-pointer mt-1"
           >
-            Create Trip
+            {loading ? 'Creating...' : 'Create Trip'}
           </button>
           <button
             onClick={onClose}

@@ -12,19 +12,40 @@ export default function SetAlertModal({ isOpen, onClose }: SetAlertModalProps) {
   const [destination, setDestination] = useState('');
   const [targetPrice, setTargetPrice] = useState('');
   const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   if (!isOpen) return null;
 
-  function handleSave() {
+  async function handleSave() {
     if (!destination || !targetPrice) return;
-    // TODO: Save to price_alerts table in Supabase
-    setSaved(true);
-    setTimeout(() => {
-      setSaved(false);
-      setDestination('');
-      setTargetPrice('');
-      onClose();
-    }, 1500);
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/alerts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          origin_code: origin,
+          destination_code: destination,
+          target_price: Number(targetPrice),
+          destination_name: destination,
+        }),
+      });
+
+      if (!res.ok) throw new Error('Failed to save alert');
+
+      setSaved(true);
+      setTimeout(() => {
+        setSaved(false);
+        setDestination('');
+        setTargetPrice('');
+        onClose();
+      }, 1500);
+    } catch {
+      // Silently fail — keep the UI responsive
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -89,10 +110,10 @@ export default function SetAlertModal({ isOpen, onClose }: SetAlertModalProps) {
             </div>
             <button
               onClick={handleSave}
-              disabled={!destination || !targetPrice}
+              disabled={!destination || !targetPrice || loading}
               className="w-full py-2.5 rounded-lg bg-gradient-to-br from-gold to-gold-2 text-sm text-white font-medium font-body transition-all hover:opacity-90 hover:-translate-y-px disabled:opacity-40 cursor-pointer mt-1"
             >
-              Save Alert
+              {loading ? 'Saving...' : 'Save Alert'}
             </button>
             <button
               onClick={onClose}
