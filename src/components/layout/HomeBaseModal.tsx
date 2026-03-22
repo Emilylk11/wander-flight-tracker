@@ -43,7 +43,7 @@ export default function HomeBaseModal({ isOpen, onClose, onSelect }: HomeBaseMod
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl p-7 w-[360px] shadow-[0_20px_60px_rgba(0,0,0,0.2)]"
+        className="bg-white rounded-2xl p-5 sm:p-7 w-full max-w-[360px] shadow-[0_20px_60px_rgba(0,0,0,0.2)]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="font-display text-xl font-medium mb-1.5">

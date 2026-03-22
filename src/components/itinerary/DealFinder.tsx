@@ -130,20 +130,20 @@ export default function DealFinder({ tripId, budget, homeEntityId, homeAirportCo
           ) : (
             <div className="flex flex-col gap-1">
               {deals.map((deal, i) => (
-                <div key={`${deal.destinationCode}-${i}`} className="flex items-center gap-3 py-2.5 border-b border-wborder last:border-b-0">
-                  <div className="flex-1">
-                    <div className="text-sm font-medium text-wtext">
+                <div key={`${deal.destinationCode}-${i}`} className="flex items-center gap-2 sm:gap-3 py-2.5 border-b border-wborder last:border-b-0">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs sm:text-sm font-medium text-wtext truncate">
                       {homeAirportCode} → {deal.destinationCode || deal.destination}
                     </div>
-                    <div className="text-[11px] text-wtext-3">{deal.destination}</div>
+                    <div className="text-[10px] sm:text-[11px] text-wtext-3 truncate">{deal.destination}</div>
                   </div>
-                  <div className="price-display text-[15px] text-gold-3">
+                  <div className="price-display text-sm sm:text-[15px] text-gold-3 flex-shrink-0">
                     ${deal.price.toLocaleString()}
                   </div>
                   <button
                     onClick={() => addToTrip(deal, i)}
                     disabled={addingIdx === i}
-                    className="text-[10px] px-3 py-1.5 rounded-md bg-gradient-to-br from-gold to-gold-2 text-white font-medium cursor-pointer hover:opacity-90 disabled:opacity-40 transition-all"
+                    className="text-[10px] px-2 sm:px-3 py-1.5 rounded-md bg-gradient-to-br from-gold to-gold-2 text-white font-medium cursor-pointer hover:opacity-90 disabled:opacity-40 transition-all flex-shrink-0"
                   >
                     {addingIdx === i ? '...' : '+ Add'}
                   </button>

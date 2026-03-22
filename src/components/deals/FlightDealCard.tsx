@@ -68,7 +68,7 @@ export default function FlightDealCard({ deal }: { deal: FlightDeal }) {
           href={bookingUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="hidden group-hover:flex items-center text-[10px] px-2.5 py-1.5 rounded-md bg-gradient-to-br from-gold to-gold-2 text-white font-medium no-underline hover:opacity-90 transition-all"
+          className="flex sm:hidden sm:group-hover:flex items-center text-[10px] px-2.5 py-1.5 rounded-md bg-gradient-to-br from-gold to-gold-2 text-white font-medium no-underline hover:opacity-90 transition-all"
         >
           Book ↗
         </a>

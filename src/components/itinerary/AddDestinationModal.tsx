@@ -50,7 +50,7 @@ export default function AddDestinationModal({ tripId, isOpen, onClose }: AddDest
 
   return (
     <div className="fixed inset-0 bg-[rgba(28,26,22,0.5)] z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-white rounded-2xl p-7 w-full max-w-[380px] shadow-[0_20px_60px_rgba(0,0,0,0.2)]" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-white rounded-2xl p-5 sm:p-7 w-full max-w-[380px] shadow-[0_20px_60px_rgba(0,0,0,0.2)]" onClick={(e) => e.stopPropagation()}>
         <div className="font-display text-xl font-medium mb-1.5">Add Destination</div>
         <div className="text-xs text-wtext-3 mb-5">Add another city to your trip.</div>
 

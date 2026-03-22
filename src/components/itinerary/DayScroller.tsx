@@ -25,7 +25,7 @@ export default function DayScroller({
           <button
             key={dest.id}
             onClick={() => onSelect(i)}
-            className={`flex-shrink-0 w-[160px] bg-white border rounded-xl p-3.5 cursor-pointer transition-all text-left ${
+            className={`flex-shrink-0 w-[140px] sm:w-[160px] bg-white border rounded-xl p-3 sm:p-3.5 cursor-pointer transition-all text-left ${
               isActive
                 ? 'border-gold bg-gradient-to-br from-[rgba(184,150,90,0.05)] to-[rgba(212,175,114,0.03)]'
                 : 'border-wborder hover:border-gold hover:bg-gradient-to-br hover:from-[rgba(184,150,90,0.05)] hover:to-[rgba(212,175,114,0.03)]'

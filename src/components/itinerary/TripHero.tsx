@@ -29,7 +29,7 @@ export default function TripHero({ trip, destinations }: TripHeroProps) {
 
   return (
     <div
-      className="rounded-card overflow-hidden relative h-[180px] cursor-pointer mb-4 animate-fade-up"
+      className="rounded-card overflow-hidden relative h-[150px] sm:h-[180px] cursor-pointer mb-4 animate-fade-up"
       style={{ animationDelay: '0.1s' }}
     >
       {/* Background with emoji */}
@@ -39,10 +39,10 @@ export default function TripHero({ trip, destinations }: TripHeroProps) {
 
       {/* Gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-[rgba(28,26,22,0.85)] via-[rgba(28,26,22,0.1)] to-transparent flex flex-col justify-end px-[22px] py-5">
-        <h2 className="font-display text-2xl font-medium text-white tracking-[0.04em]">
+        <h2 className="font-display text-xl sm:text-2xl font-medium text-white tracking-[0.04em]">
           {trip.name}
         </h2>
-        <div className="flex items-center gap-3.5 mt-1.5">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3.5 mt-1.5">
           <span className="text-[11px] text-white/80 flex items-center gap-[5px]">
             📅 {startDate} — {endDate}
           </span>

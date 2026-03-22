@@ -203,7 +203,7 @@ export default function ItineraryView({ trip, destinations, items, homeAirportCo
         </div>
         <button
           onClick={() => setShowAddDestModal(true)}
-          className="flex-shrink-0 w-[100px] h-[90px] border-2 border-dashed border-wborder-2 rounded-xl flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-gold hover:bg-[rgba(184,150,90,0.04)] transition-all mt-1"
+          className="flex-shrink-0 w-[80px] sm:w-[100px] h-[80px] sm:h-[90px] border-2 border-dashed border-wborder-2 rounded-xl flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-gold hover:bg-[rgba(184,150,90,0.04)] transition-all mt-1"
         >
           <span className="text-lg text-wtext-3">+</span>
           <span className="text-[10px] text-wtext-3 font-medium">Add City</span>
@@ -271,7 +271,7 @@ export default function ItineraryView({ trip, destinations, items, homeAirportCo
       {/* Add/Edit Activity Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-[rgba(28,26,22,0.5)] z-50 flex items-center justify-center p-4" onClick={() => { setShowAddModal(false); resetForm(); }}>
-          <div className="bg-white rounded-2xl p-7 w-full max-w-[420px] shadow-[0_20px_60px_rgba(0,0,0,0.2)]" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white rounded-2xl p-5 sm:p-7 w-full max-w-[420px] shadow-[0_20px_60px_rgba(0,0,0,0.2)]" onClick={(e) => e.stopPropagation()}>
             <div className="font-display text-xl font-medium mb-1.5">
               {editingItem ? 'Edit Activity' : 'Add Activity'}
             </div>
