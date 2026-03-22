@@ -6,7 +6,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const { data: { user } } = await supabase.auth.getUser();
 
   let profile = null;
-  let trips: any[] = [];
+  let trips: Record<string, unknown>[] = [];
   let wishlistCount = 0;
 
   if (user) {

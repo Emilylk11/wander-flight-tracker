@@ -23,15 +23,15 @@ export default async function CompanionPage() {
     }
 
     if (tripsRes.data) {
-      trips = tripsRes.data.map((t: any) => ({
-        name: t.name,
+      trips = tripsRes.data.map((t: Record<string, unknown>) => ({
+        name: t.name as string,
         dates: t.start_date && t.end_date ? `${t.start_date} — ${t.end_date}` : 'Dates TBD',
-        destinations: (t.trip_destinations || []).map((d: any) => d.city),
+        destinations: ((t.trip_destinations as Record<string, unknown>[] | null) || []).map((d: Record<string, unknown>) => d.city as string),
       }));
     }
 
     if (wishlistRes.data) {
-      wishlist = wishlistRes.data.map((w: any) => ({
+      wishlist = wishlistRes.data.map((w: Record<string, unknown>) => ({
         destination: w.destination,
         targetDate: w.target_month && w.target_year ? `${w.target_month} ${w.target_year}` : '',
         lastPrice: w.last_seen_price || 0,
