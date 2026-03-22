@@ -6,15 +6,16 @@ export async function GET(request: NextRequest) {
   const entityId = request.nextUrl.searchParams.get('entityId');
   const originCode = request.nextUrl.searchParams.get('originCode') || 'TUL';
 
-  if (!entityId) {
+  if (!entityId && !originCode) {
     return NextResponse.json(
-      { error: 'entityId parameter required' },
+      { error: 'entityId or originCode parameter required' },
       { status: 400 }
     );
   }
 
   try {
-    const data = await searchFlightsEverywhere(entityId);
+    // Always resolve entityId via airport search for Flights Scraper Sky compatibility
+    const data = await searchFlightsEverywhere(originCode || entityId || 'TUL');
 
     // Save lowest prices to flight_price_history
     // Sky Scrapper calls always save to price history

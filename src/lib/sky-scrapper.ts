@@ -63,66 +63,56 @@ export async function searchFlights(params: {
 const entityIdCache: Record<string, string> = {};
 
 // Step 3: Find deals from home airport (flights everywhere)
-export async function searchFlightsEverywhere(originEntityId: string) {
-  // The old Sky Scrapper entityIds don't work with Flights Scraper Sky.
-  // Always resolve via flights/airports first to get the correct entityId.
-  let resolvedEntityId = entityIdCache[originEntityId];
+export async function searchFlightsEverywhere(originCodeOrEntityId: string) {
+  // Always resolve via flights/airports to get the correct entityId
+  let resolvedEntityId = entityIdCache[originCodeOrEntityId];
 
   if (!resolvedEntityId) {
     try {
-      console.log('[Sky] Looking up correct entityId via flights/airports for: Tulsa');
-      const airportData = await searchAirport('Tulsa');
-      const airports = airportData?.data || [];
-      console.log('[Sky] Airport results:', JSON.stringify(airports.slice(0, 2)).substring(0, 500));
+      // Use the code/name to search for the airport
+      const query = originCodeOrEntityId.length <= 4 ? originCodeOrEntityId : 'Tulsa';
+      console.log('[Sky] Looking up entityId for:', query);
+      const airportData = await searchAirport(query);
 
-      if (airports.length > 0) {
-        // Try multiple possible locations for entityId in the response
+      // Log full response to understand structure
+      console.log('[Sky] Airport response:', JSON.stringify(airportData).substring(0, 1000));
+
+      const airports = airportData?.data || airportData?.results || [];
+
+      if (Array.isArray(airports) && airports.length > 0) {
         const ap = airports[0];
-        resolvedEntityId =
-          ap?.entityId ||
-          ap?.navigation?.entityId ||
-          ap?.navigation?.relevantFlightParams?.entityId ||
-          ap?.entityType?.entityId ||
-          '';
-
-        // If entityId not found in expected places, search deeper
-        if (!resolvedEntityId) {
-          const apStr = JSON.stringify(ap);
-          const match = apStr.match(/"entityId"\s*:\s*"([^"]+)"/);
-          if (match) resolvedEntityId = match[1];
-        }
-
+        // Search for entityId in any nested location
+        const apStr = JSON.stringify(ap);
+        const match = apStr.match(/"entityId"\s*:\s*"([^"]+)"/);
+        resolvedEntityId = match ? match[1] : '';
         console.log('[Sky] Resolved entityId:', resolvedEntityId);
+
         if (resolvedEntityId) {
-          entityIdCache[originEntityId] = resolvedEntityId;
+          entityIdCache[originCodeOrEntityId] = resolvedEntityId;
         }
       }
     } catch (err) {
-      console.error('[Sky] Airport lookup failed:', err);
+      console.error('[Sky] Airport lookup failed:', err instanceof Error ? err.message : err);
     }
   }
 
-  // Use resolved entityId, or fall back to original
-  const useEntityId = resolvedEntityId || originEntityId;
-  console.log('[Sky] Searching everywhere with entityId:', useEntityId);
+  if (!resolvedEntityId) {
+    console.error('[Sky] Could not resolve entityId, cannot search');
+    throw new Error('Could not resolve airport entityId');
+  }
 
+  console.log('[Sky] Searching everywhere with entityId:', resolvedEntityId);
   const res = await fetch(
-    `${BASE_URL}/flights/search-everywhere?fromEntityId=${useEntityId}&type=oneway&currency=USD&market=en-US&countryCode=US`,
+    `${BASE_URL}/flights/search-everywhere?fromEntityId=${resolvedEntityId}&type=oneway&currency=USD&market=en-US&countryCode=US`,
     { headers: HEADERS }
   );
   console.log('[Sky] search-everywhere status:', res.status);
-
-  if (!res.ok) {
-    const errorText = await res.text().catch(() => 'Could not read response');
-    console.error('[Sky] search-everywhere failed:', errorText.substring(0, 500));
-    throw new Error(`Flights everywhere search failed (status ${res.status})`);
-  }
 
   const data = await res.json();
 
   // Check if the API returned an error inside a 200 response
   if (data?.data === null && data?.errors) {
-    console.error('[Sky] API returned error in 200:', JSON.stringify(data.errors));
+    console.error('[Sky] API error in 200:', JSON.stringify(data.errors));
     throw new Error(`API error: ${JSON.stringify(data.errors)}`);
   }
 
