@@ -64,3 +64,17 @@ html, body {
 .animate-fade-up {
   animation: fadeUp 0.5s ease both;
 }
+
+@keyframes slideIn {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+.animate-slide-in {
+  animation: slideIn 0.25s ease both;
+}
+
+/* Safe area for devices with notch/home indicator */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}

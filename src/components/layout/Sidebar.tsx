@@ -54,6 +54,7 @@ type SidebarProps = {
   trips: Trip[];
   wishlistCount: number;
   onHomeBaseClick: () => void;
+  onNavClick?: () => void;
 };
 
 const statusColors: Record<string, { dot: string; bg: string; text: string }> = {
@@ -69,7 +70,7 @@ function formatDate(dateStr: string | null) {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-export default function Sidebar({ homeBase, userName, trips, wishlistCount, onHomeBaseClick }: SidebarProps) {
+export default function Sidebar({ homeBase, userName, trips, wishlistCount, onHomeBaseClick, onNavClick }: SidebarProps) {
   const pathname = usePathname();
 
   const initials = userName
@@ -108,7 +109,7 @@ export default function Sidebar({ homeBase, userName, trips, wishlistCount, onHo
   const activeTrips = trips.filter(t => t.status !== 'completed');
 
   return (
-    <aside className="w-sidebar flex-shrink-0 bg-white border-r border-wborder flex flex-col relative overflow-hidden">
+    <aside className="w-full md:w-sidebar flex-shrink-0 bg-white border-r border-wborder flex flex-col relative overflow-hidden h-full">
       <div className="absolute top-0 left-0 right-0 h-[180px] bg-gradient-to-b from-[rgba(184,150,90,0.05)] to-transparent pointer-events-none" />
 
       {/* Logo */}
@@ -154,6 +155,7 @@ export default function Sidebar({ homeBase, userName, trips, wishlistCount, onHo
                 <Link
                   key={item.href}
                   href={item.href}
+                  onClick={onNavClick}
                   className={`group flex items-center gap-2.5 px-3 py-[9px] rounded-lg cursor-pointer transition-all mb-[1px] text-[13px] font-body no-underline ${
                     isActive
                       ? 'active bg-gradient-to-br from-[rgba(184,150,90,0.12)] to-[rgba(212,175,114,0.08)] text-gold-3 font-medium'
@@ -193,6 +195,7 @@ export default function Sidebar({ homeBase, userName, trips, wishlistCount, onHo
               <Link
                 key={trip.id}
                 href={`/itinerary?trip=${trip.id}`}
+                onClick={onNavClick}
                 className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer transition-all hover:bg-cream mb-1 no-underline"
               >
                 <div className={`w-2 h-2 rounded-full ${colors.dot} flex-shrink-0`} />

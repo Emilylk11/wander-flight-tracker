@@ -26,6 +26,7 @@ export default function AppShell({ profile, trips, wishlistCount, children }: Ap
   const [showHomeBaseModal, setShowHomeBaseModal] = useState(false);
   const [showAlertModal, setShowAlertModal] = useState(false);
   const [showNewTripModal, setShowNewTripModal] = useState(false);
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
 
   const userName = profile?.name || 'Traveler';
   const displayName = userName.split(' ').length > 1
@@ -39,6 +40,7 @@ export default function AppShell({ profile, trips, wishlistCount, children }: Ap
 
   return (
     <div className="flex h-screen overflow-hidden">
+      {/* Desktop Sidebar */}
       <div className="hidden md:block">
         <Sidebar
           homeBase={homeBase}
@@ -49,6 +51,23 @@ export default function AppShell({ profile, trips, wishlistCount, children }: Ap
         />
       </div>
 
+      {/* Mobile Sidebar Drawer */}
+      {showMobileSidebar && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div className="absolute inset-0 bg-[rgba(28,26,22,0.5)]" onClick={() => setShowMobileSidebar(false)} />
+          <div className="absolute left-0 top-0 bottom-0 w-[280px] bg-white shadow-2xl overflow-y-auto animate-slide-in">
+            <Sidebar
+              homeBase={homeBase}
+              userName={displayName}
+              trips={trips}
+              wishlistCount={wishlistCount}
+              onHomeBaseClick={() => { setShowMobileSidebar(false); setShowHomeBaseModal(true); }}
+              onNavClick={() => setShowMobileSidebar(false)}
+            />
+          </div>
+        </div>
+      )}
+
       <main className="flex-1 flex flex-col overflow-hidden bg-cream">
         <Topbar
           pathname={pathname}
@@ -57,8 +76,9 @@ export default function AppShell({ profile, trips, wishlistCount, children }: Ap
           homeAirportCode={profile?.home_airport_code || 'TUL'}
           onSetAlert={() => setShowAlertModal(true)}
           onNewTrip={() => setShowNewTripModal(true)}
+          onMenuClick={() => setShowMobileSidebar(true)}
         />
-        <div className="flex-1 overflow-y-auto px-4 py-5 md:px-8 md:py-7 pb-20 md:pb-7">
+        <div className="flex-1 overflow-y-auto px-3 py-4 sm:px-4 sm:py-5 md:px-8 md:py-7 pb-20 md:pb-7">
           {children}
         </div>
       </main>
