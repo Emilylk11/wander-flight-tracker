@@ -1,13 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-
-const airports = [
-  { city: 'Tulsa, Oklahoma', code: 'TUL', full: 'Tulsa Int\'l Airport', flag: '🇺🇸', entityId: '95673329' },
-  { city: 'New York City', code: 'JFK', full: 'John F. Kennedy Int\'l', flag: '🗽', entityId: '95565058' },
-  { city: 'Los Angeles', code: 'LAX', full: 'Los Angeles Int\'l', flag: '🌴', entityId: '95565059' },
-  { city: 'Chicago', code: 'ORD', full: 'O\'Hare Int\'l', flag: '🏙️', entityId: '95565061' },
-];
+import AirportSearch from '@/components/ui/AirportSearch';
 
 type HomeBaseModalProps = {
   isOpen: boolean;
@@ -20,28 +14,26 @@ export default function HomeBaseModal({ isOpen, onClose, onSelect }: HomeBaseMod
 
   if (!isOpen) return null;
 
-  async function handleSelect(apt: typeof airports[0]) {
-    const displayCity = apt.city.includes(',')
-      ? apt.city.split(',')[0].trim() + ', ' + apt.city.split(',')[1].trim().slice(0, 2).toUpperCase()
-      : apt.city;
+  async function handleAirportSelect(airport: { iata: string; name: string; city: string; entityId: string }) {
+    const displayCity = airport.city || airport.name;
+    const display = `${displayCity} — ${airport.iata}`;
 
-    onSelect(`${displayCity} — ${apt.code}`, apt.code, apt.entityId);
+    onSelect(display, airport.iata, airport.entityId);
     onClose();
 
-    // Persist to database
     try {
       await fetch('/api/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          home_airport_code: apt.code,
+          home_airport_code: airport.iata,
           home_airport_name: displayCity,
-          home_entity_id: apt.entityId,
+          home_entity_id: airport.entityId,
         }),
       });
       router.refresh();
     } catch {
-      // Local state already updated, DB sync is best-effort
+      // Local state already updated
     }
   }
 
@@ -58,23 +50,16 @@ export default function HomeBaseModal({ isOpen, onClose, onSelect }: HomeBaseMod
           Set Your Home Base
         </div>
         <div className="text-xs text-wtext-3 mb-5">
-          Flight deals and alerts will be based on your nearest major airport.
+          Search for your nearest airport. Flight deals and alerts will be based on this.
         </div>
 
-        <div className="flex flex-col gap-2 mb-5">
-          {airports.map((apt) => (
-            <button
-              key={apt.code}
-              onClick={() => handleSelect(apt)}
-              className="flex items-center gap-2.5 p-3 border border-wborder rounded-[10px] cursor-pointer transition-all hover:border-gold hover:bg-[rgba(184,150,90,0.04)] text-left"
-            >
-              <span className="text-xl">{apt.flag}</span>
-              <div>
-                <div className="text-[13px] font-medium text-wtext">{apt.city}</div>
-                <div className="text-[11px] text-wtext-3">{apt.code} — {apt.full}</div>
-              </div>
-            </button>
-          ))}
+        <div className="mb-5">
+          <AirportSearch
+            value=""
+            onSelect={handleAirportSelect}
+            placeholder="Search city or airport..."
+            label="Home Airport"
+          />
         </div>
 
         <button

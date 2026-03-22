@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await request.json();
-    const { origin_code, destination_code, target_price, destination_name } = body;
+    const { origin_code, origin_entity_id, destination_code, destination_entity_id, target_price, destination_name } = body;
 
     if (!origin_code || !destination_code || !target_price) {
       return NextResponse.json({ error: 'origin_code, destination_code, and target_price required' }, { status: 400 });
@@ -19,9 +19,9 @@ export async function POST(request: NextRequest) {
       .insert({
         user_id: user.id,
         origin_code,
-        origin_entity_id: '',
+        origin_entity_id: origin_entity_id || '',
         destination_code,
-        destination_entity_id: '',
+        destination_entity_id: destination_entity_id || '',
         destination_name: destination_name || destination_code,
         target_price: Number(target_price),
         is_active: true,

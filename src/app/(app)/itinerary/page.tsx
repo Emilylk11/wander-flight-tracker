@@ -17,6 +17,13 @@ export default async function ItineraryPage() {
     );
   }
 
+  // Fetch profile for home airport info
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('home_airport_code, home_entity_id')
+    .eq('id', user.id)
+    .single();
+
   // Get the user's most recent non-completed trip
   const { data: trips } = await supabase
     .from('trips')
@@ -61,6 +68,8 @@ export default async function ItineraryPage() {
       trip={trip}
       destinations={destRes.data || []}
       items={itemsRes.data || []}
+      homeAirportCode={profile?.home_airport_code || 'TUL'}
+      homeEntityId={profile?.home_entity_id || '95673329'}
     />
   );
 }
