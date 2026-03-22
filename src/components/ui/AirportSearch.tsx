@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 type Airport = {
   skyId: string;
   entityId: string;
@@ -38,6 +40,33 @@ export default function AirportSearch({ value, onSelect, placeholder = 'Search c
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  function parseAirports(data: any): Airport[] {
+    // Try multiple response structures
+    const items = data?.data || data?.results || data?.airports || [];
+
+    if (!Array.isArray(items) || items.length === 0) return [];
+
+    return items
+      .slice(0, 8)
+      .map((item: any) => {
+        // Structure 1: Sky Scrapper format
+        const nav = item?.navigation;
+        const pres = item?.presentation;
+
+        // Structure 2: Flights Scraper Sky format (flatter)
+        const skyId = item?.skyId || item?.iata || item?.id || '';
+        const entityId = item?.entityId || item?.entity_id || String(item?.id || '');
+        const iata = item?.skyId || item?.iata || nav?.relevantFlightParams?.skyId || skyId;
+
+        const name = pres?.suggestionTitle || pres?.title || item?.name || item?.airportName || item?.title || '';
+        const city = pres?.subtitle || item?.city || item?.cityName || nav?.localizedName || '';
+        const country = nav?.relevantFlightParams?.country || item?.country || item?.countryName || '';
+
+        return { skyId, entityId, iata, name, city, country };
+      })
+      .filter((a: Airport) => a.iata || a.name);
+  }
+
   function handleChange(val: string) {
     setQuery(val);
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -55,20 +84,7 @@ export default function AirportSearch({ value, onSelect, placeholder = 'Search c
         if (!res.ok) throw new Error();
         const data = await res.json();
 
-        /* eslint-disable @typescript-eslint/no-explicit-any */
-        const airports: Airport[] = (data?.data || [])
-          .filter((item: any) => item?.navigation?.entityType === 'AIRPORT')
-          .slice(0, 6)
-          .map((item: any) => ({
-            skyId: item.skyId || '',
-            entityId: item.entityId || '',
-            iata: item.skyId || item.navigation?.relevantHotelParams?.entityId || '',
-            name: item.presentation?.suggestionTitle || item.navigation?.localizedName || '',
-            city: item.presentation?.subtitle || '',
-            country: item.navigation?.relevantFlightParams?.country || '',
-          }));
-        /* eslint-enable @typescript-eslint/no-explicit-any */
-
+        const airports = parseAirports(data);
         setResults(airports);
         setShowDropdown(airports.length > 0);
       } catch {
@@ -102,19 +118,21 @@ export default function AirportSearch({ value, onSelect, placeholder = 'Search c
       />
       {loading && (
         <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-wtext-3">
-          {label ? 'searching...' : '...'}
+          searching...
         </div>
       )}
       {showDropdown && (
-        <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-wborder rounded-lg shadow-lg z-20 max-h-[200px] overflow-y-auto">
+        <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-wborder rounded-lg shadow-lg z-20 max-h-[220px] overflow-y-auto">
           {results.map((apt, i) => (
             <button
               key={`${apt.entityId}-${i}`}
               onMouseDown={() => handleSelect(apt)}
               className="w-full text-left px-3 py-2.5 hover:bg-cream transition-colors cursor-pointer border-b border-wborder last:border-b-0"
             >
-              <div className="text-sm font-medium text-wtext">{apt.iata} — {apt.name}</div>
-              <div className="text-[11px] text-wtext-3">{apt.city}</div>
+              <div className="text-sm font-medium text-wtext">
+                {apt.iata && apt.iata !== apt.name ? `${apt.iata} — ` : ''}{apt.name}
+              </div>
+              {apt.city && <div className="text-[11px] text-wtext-3">{apt.city}</div>}
             </button>
           ))}
         </div>

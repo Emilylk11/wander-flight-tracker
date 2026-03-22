@@ -1,3 +1,5 @@
+'use client';
+
 import type { FlightDeal } from '@/types/flights';
 
 const badgeStyles = {
@@ -6,12 +8,19 @@ const badgeStyles = {
   watch: { bg: 'bg-[rgba(100,100,100,0.08)]', text: 'text-wtext-3', label: 'WATCH' },
 };
 
+function buildGoogleFlightsUrl(deal: FlightDeal): string {
+  const params = new URLSearchParams();
+  if (deal.originCode) params.set('q', `flights from ${deal.originCode} to ${deal.destinationCode || deal.destination}`);
+  return `https://www.google.com/travel/flights?${params.toString()}`;
+}
+
 export default function FlightDealCard({ deal }: { deal: FlightDeal }) {
   const badge = badgeStyles[deal.badge];
   const isDown = (deal.priceChange ?? 0) < 0;
+  const bookingUrl = buildGoogleFlightsUrl(deal);
 
   return (
-    <div className="flex items-center gap-3 py-3 border-b border-wborder last:border-b-0 cursor-pointer transition-all group">
+    <div className="flex items-center gap-3 py-3 border-b border-wborder last:border-b-0 group">
       <div className="flex-1">
         <div className="text-sm font-medium text-wtext mb-[2px] flex items-center gap-1.5">
           {deal.originCode}
@@ -24,25 +33,37 @@ export default function FlightDealCard({ deal }: { deal: FlightDeal }) {
           </span>
         </div>
         <div className="text-[11px] text-wtext-3">
-          {deal.destination} · {deal.dates} · {deal.stops} stop{deal.stops !== 1 ? 's' : ''} · {deal.duration}
+          {deal.destination}
+          {deal.dates ? ` · ${deal.dates}` : ''}
+          {deal.stops != null ? ` · ${deal.stops} stop${deal.stops !== 1 ? 's' : ''}` : ''}
+          {deal.duration ? ` · ${deal.duration}` : ''}
         </div>
       </div>
-      <div className="text-right">
-        {/* Critical: prices use DM Sans 600, never Cormorant Garamond */}
-        <div className="price-display text-[15px] text-gold-3 group-hover:text-gold-3">
-          ${deal.price.toLocaleString()}
-        </div>
-        {deal.priceChange != null && (
-          <div
-            className={`text-[10px] font-medium px-[7px] py-[2px] rounded-full mt-[2px] text-right ${
-              isDown
-                ? 'bg-[rgba(60,120,80,0.1)] text-[#3C7850]'
-                : 'bg-[rgba(200,60,60,0.08)] text-[#C83C3C]'
-            }`}
-          >
-            {isDown ? '↓' : '↑'} ${Math.abs(deal.priceChange).toLocaleString()} {isDown ? 'drop' : 'rise'}
+      <div className="text-right flex items-center gap-2">
+        <div>
+          <div className="price-display text-[15px] text-gold-3">
+            ${deal.price.toLocaleString()}
           </div>
-        )}
+          {deal.priceChange != null && (
+            <div
+              className={`text-[10px] font-medium px-[7px] py-[2px] rounded-full mt-[2px] text-right ${
+                isDown
+                  ? 'bg-[rgba(60,120,80,0.1)] text-[#3C7850]'
+                  : 'bg-[rgba(200,60,60,0.08)] text-[#C83C3C]'
+              }`}
+            >
+              {isDown ? '↓' : '↑'} ${Math.abs(deal.priceChange).toLocaleString()} {isDown ? 'drop' : 'rise'}
+            </div>
+          )}
+        </div>
+        <a
+          href={bookingUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hidden group-hover:flex items-center text-[10px] px-2.5 py-1.5 rounded-md bg-gradient-to-br from-gold to-gold-2 text-white font-medium no-underline hover:opacity-90 transition-all"
+        >
+          Book ↗
+        </a>
       </div>
     </div>
   );
