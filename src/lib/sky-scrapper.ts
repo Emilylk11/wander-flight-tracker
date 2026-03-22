@@ -59,10 +59,39 @@ export async function searchFlights(params: {
 
 // Step 3: Find deals from home airport (flights everywhere)
 export async function searchFlightsEverywhere(originEntityId: string) {
-  const res = await fetch(
+  // Try with the entityId first
+  let res = await fetch(
     `${BASE_URL}/flights/search-everywhere?fromEntityId=${originEntityId}&type=oneway&currency=USD&market=en-US&countryCode=US`,
     { headers: HEADERS }
   );
+
+  // If that fails, try with airport code format (e.g., "TULS" or "TUL")
+  if (!res.ok) {
+    res = await fetch(
+      `${BASE_URL}/flights/search-everywhere?fromEntityId=TULS&type=oneway&currency=USD&market=en-US&countryCode=US`,
+      { headers: HEADERS }
+    );
+  }
+
+  // If still fails, try the searchAirport endpoint first to get proper ID
+  if (!res.ok) {
+    try {
+      const airportData = await searchAirport('Tulsa');
+      const airports = airportData?.data || [];
+      if (airports.length > 0) {
+        const entityId = airports[0]?.entityId || airports[0]?.navigation?.entityId || '';
+        if (entityId) {
+          res = await fetch(
+            `${BASE_URL}/flights/search-everywhere?fromEntityId=${entityId}&type=oneway&currency=USD&market=en-US&countryCode=US`,
+            { headers: HEADERS }
+          );
+        }
+      }
+    } catch {
+      // Continue with original error
+    }
+  }
+
   if (!res.ok) throw new Error('Flights everywhere search failed');
   return res.json();
 }

@@ -9,7 +9,7 @@ const badgeStyles = {
 };
 
 function buildGoogleFlightsUrl(deal: FlightDeal): string {
-  // Use Skyscanner for more reliable deep-linking with airport codes
+  // If we have specific departure dates, link to Skyscanner with those dates
   if (deal.originCode && deal.destinationCode && deal.departureDate) {
     const depDate = deal.departureDate.replace(/-/g, '');
     const retDate = deal.returnDate ? deal.returnDate.replace(/-/g, '') : '';
@@ -18,8 +18,8 @@ function buildGoogleFlightsUrl(deal: FlightDeal): string {
     }
     return `https://www.skyscanner.com/transport/flights/${deal.originCode.toLowerCase()}/${deal.destinationCode.toLowerCase()}/${depDate}/`;
   }
-  // Fallback: Google Flights search
-  return `https://www.google.com/travel/flights?q=flights+from+${deal.originCode}+to+${deal.destinationCode || deal.destination}`;
+  // Default: Google Flights general search (no specific dates — user picks their own)
+  return `https://www.google.com/travel/flights?q=flights+from+${encodeURIComponent(deal.originCode)}+to+${encodeURIComponent(deal.destinationCode || deal.destination)}&curr=USD`;
 }
 
 export default function FlightDealCard({ deal }: { deal: FlightDeal }) {

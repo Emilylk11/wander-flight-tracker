@@ -88,6 +88,7 @@ export default function DealsPage() {
     }
 
     fetchDeals();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
