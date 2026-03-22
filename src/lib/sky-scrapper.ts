@@ -59,51 +59,74 @@ export async function searchFlights(params: {
   return res.json();
 }
 
+// Cache for resolved entity IDs so we don't look them up every time
+const entityIdCache: Record<string, string> = {};
+
 // Step 3: Find deals from home airport (flights everywhere)
 export async function searchFlightsEverywhere(originEntityId: string) {
-  // Try with the entityId first
-  const url1 = `${BASE_URL}/flights/search-everywhere?fromEntityId=${originEntityId}&type=oneway&currency=USD&market=en-US&countryCode=US`;
-  console.log('[Sky] Trying search-everywhere with entityId:', originEntityId);
-  let res = await fetch(url1, { headers: HEADERS });
-  console.log('[Sky] Response status:', res.status);
+  // The old Sky Scrapper entityIds don't work with Flights Scraper Sky.
+  // Always resolve via flights/airports first to get the correct entityId.
+  let resolvedEntityId = entityIdCache[originEntityId];
 
-  // If that fails, try with airport code format
-  if (!res.ok) {
-    const url2 = `${BASE_URL}/flights/search-everywhere?fromEntityId=TULS&type=oneway&currency=USD&market=en-US&countryCode=US`;
-    console.log('[Sky] Retrying with TULS');
-    res = await fetch(url2, { headers: HEADERS });
-    console.log('[Sky] TULS status:', res.status);
-  }
-
-  // If still fails, try the searchAirport endpoint first to get proper ID
-  if (!res.ok) {
+  if (!resolvedEntityId) {
     try {
-      console.log('[Sky] Trying searchAirport fallback');
+      console.log('[Sky] Looking up correct entityId via flights/airports for: Tulsa');
       const airportData = await searchAirport('Tulsa');
       const airports = airportData?.data || [];
-      console.log('[Sky] Airport search results:', airports.length);
+      console.log('[Sky] Airport results:', JSON.stringify(airports.slice(0, 2)).substring(0, 500));
+
       if (airports.length > 0) {
-        const entityId = airports[0]?.entityId || airports[0]?.navigation?.entityId || airports[0]?.navigation?.relevantFlightParams?.entityId || '';
-        console.log('[Sky] Found entityId:', entityId);
-        if (entityId) {
-          res = await fetch(
-            `${BASE_URL}/flights/search-everywhere?fromEntityId=${entityId}&type=oneway&currency=USD&market=en-US&countryCode=US`,
-            { headers: HEADERS }
-          );
-          console.log('[Sky] Final attempt status:', res.status);
+        // Try multiple possible locations for entityId in the response
+        const ap = airports[0];
+        resolvedEntityId =
+          ap?.entityId ||
+          ap?.navigation?.entityId ||
+          ap?.navigation?.relevantFlightParams?.entityId ||
+          ap?.entityType?.entityId ||
+          '';
+
+        // If entityId not found in expected places, search deeper
+        if (!resolvedEntityId) {
+          const apStr = JSON.stringify(ap);
+          const match = apStr.match(/"entityId"\s*:\s*"([^"]+)"/);
+          if (match) resolvedEntityId = match[1];
+        }
+
+        console.log('[Sky] Resolved entityId:', resolvedEntityId);
+        if (resolvedEntityId) {
+          entityIdCache[originEntityId] = resolvedEntityId;
         }
       }
     } catch (err) {
-      console.error('[Sky] Airport search fallback failed:', err);
+      console.error('[Sky] Airport lookup failed:', err);
     }
   }
 
+  // Use resolved entityId, or fall back to original
+  const useEntityId = resolvedEntityId || originEntityId;
+  console.log('[Sky] Searching everywhere with entityId:', useEntityId);
+
+  const res = await fetch(
+    `${BASE_URL}/flights/search-everywhere?fromEntityId=${useEntityId}&type=oneway&currency=USD&market=en-US&countryCode=US`,
+    { headers: HEADERS }
+  );
+  console.log('[Sky] search-everywhere status:', res.status);
+
   if (!res.ok) {
     const errorText = await res.text().catch(() => 'Could not read response');
-    console.error('[Sky] All attempts failed. Last response:', errorText.substring(0, 500));
+    console.error('[Sky] search-everywhere failed:', errorText.substring(0, 500));
     throw new Error(`Flights everywhere search failed (status ${res.status})`);
   }
-  return res.json();
+
+  const data = await res.json();
+
+  // Check if the API returned an error inside a 200 response
+  if (data?.data === null && data?.errors) {
+    console.error('[Sky] API returned error in 200:', JSON.stringify(data.errors));
+    throw new Error(`API error: ${JSON.stringify(data.errors)}`);
+  }
+
+  return data;
 }
 
 // Step 4: Price calendar for a route
