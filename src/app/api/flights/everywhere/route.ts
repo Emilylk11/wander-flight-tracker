@@ -70,9 +70,10 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json(data);
-  } catch {
+  } catch (err) {
+    console.error('Flights everywhere error:', err instanceof Error ? err.message : err);
     return NextResponse.json(
-      { error: 'Flights everywhere search failed. Please try again.' },
+      { error: 'Flights everywhere search failed. Please try again.', detail: err instanceof Error ? err.message : 'Unknown error' },
       { status: 500 }
     );
   }

@@ -60,39 +60,47 @@ export async function searchFlights(params: {
 // Step 3: Find deals from home airport (flights everywhere)
 export async function searchFlightsEverywhere(originEntityId: string) {
   // Try with the entityId first
-  let res = await fetch(
-    `${BASE_URL}/flights/search-everywhere?fromEntityId=${originEntityId}&type=oneway&currency=USD&market=en-US&countryCode=US`,
-    { headers: HEADERS }
-  );
+  const url1 = `${BASE_URL}/flights/search-everywhere?fromEntityId=${originEntityId}&type=oneway&currency=USD&market=en-US&countryCode=US`;
+  console.log('[Sky] Trying search-everywhere with entityId:', originEntityId);
+  let res = await fetch(url1, { headers: HEADERS });
+  console.log('[Sky] Response status:', res.status);
 
-  // If that fails, try with airport code format (e.g., "TULS" or "TUL")
+  // If that fails, try with airport code format
   if (!res.ok) {
-    res = await fetch(
-      `${BASE_URL}/flights/search-everywhere?fromEntityId=TULS&type=oneway&currency=USD&market=en-US&countryCode=US`,
-      { headers: HEADERS }
-    );
+    const url2 = `${BASE_URL}/flights/search-everywhere?fromEntityId=TULS&type=oneway&currency=USD&market=en-US&countryCode=US`;
+    console.log('[Sky] Retrying with TULS');
+    res = await fetch(url2, { headers: HEADERS });
+    console.log('[Sky] TULS status:', res.status);
   }
 
   // If still fails, try the searchAirport endpoint first to get proper ID
   if (!res.ok) {
     try {
+      console.log('[Sky] Trying searchAirport fallback');
       const airportData = await searchAirport('Tulsa');
       const airports = airportData?.data || [];
+      console.log('[Sky] Airport search results:', airports.length);
       if (airports.length > 0) {
-        const entityId = airports[0]?.entityId || airports[0]?.navigation?.entityId || '';
+        const entityId = airports[0]?.entityId || airports[0]?.navigation?.entityId || airports[0]?.navigation?.relevantFlightParams?.entityId || '';
+        console.log('[Sky] Found entityId:', entityId);
         if (entityId) {
           res = await fetch(
             `${BASE_URL}/flights/search-everywhere?fromEntityId=${entityId}&type=oneway&currency=USD&market=en-US&countryCode=US`,
             { headers: HEADERS }
           );
+          console.log('[Sky] Final attempt status:', res.status);
         }
       }
-    } catch {
-      // Continue with original error
+    } catch (err) {
+      console.error('[Sky] Airport search fallback failed:', err);
     }
   }
 
-  if (!res.ok) throw new Error('Flights everywhere search failed');
+  if (!res.ok) {
+    const errorText = await res.text().catch(() => 'Could not read response');
+    console.error('[Sky] All attempts failed. Last response:', errorText.substring(0, 500));
+    throw new Error(`Flights everywhere search failed (status ${res.status})`);
+  }
   return res.json();
 }
 

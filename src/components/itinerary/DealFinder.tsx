@@ -124,8 +124,18 @@ export default function DealFinder({ tripId, budget, homeEntityId, homeAirportCo
           ) : loading ? (
             <div className="text-center py-6 text-xs text-wtext-3">Searching flights from {homeAirportCode}...</div>
           ) : deals.length === 0 ? (
-            <div className="text-center py-6 text-xs text-wtext-3">
-              No deals found{budget ? ` under $${budget.toLocaleString()}` : ''}. Try adjusting your budget or dates.
+            <div className="text-center py-6">
+              <div className="text-xs text-wtext-3 mb-3">
+                No deals found{budget ? ` under $${budget.toLocaleString()}` : ''} via our API right now.
+              </div>
+              <a
+                href={`https://www.google.com/travel/flights?q=flights+from+${homeAirportCode}&curr=USD`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block text-xs px-5 py-2 rounded-lg bg-gradient-to-br from-gold to-gold-2 text-white font-medium no-underline hover:opacity-90 transition-all"
+              >
+                Search on Google Flights ↗
+              </a>
             </div>
           ) : (
             <div className="flex flex-col gap-1">
