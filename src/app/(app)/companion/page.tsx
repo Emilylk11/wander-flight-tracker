@@ -32,9 +32,9 @@ export default async function CompanionPage() {
 
     if (wishlistRes.data) {
       wishlist = wishlistRes.data.map((w: Record<string, unknown>) => ({
-        destination: w.destination,
+        destination: w.destination as string,
         targetDate: w.target_month && w.target_year ? `${w.target_month} ${w.target_year}` : '',
-        lastPrice: w.last_seen_price || 0,
+        lastPrice: (w.last_seen_price as number) || 0,
       }));
     }
   }
