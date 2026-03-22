@@ -17,6 +17,7 @@ type BudgetCardProps = {
   categories: CategoryRow[];
   isEmpty?: boolean;
   onAddExpense?: () => void;
+  onEditBudget?: () => void;
 };
 
 export default function BudgetCard({
@@ -27,6 +28,7 @@ export default function BudgetCard({
   categories,
   isEmpty = false,
   onAddExpense,
+  onEditBudget,
 }: BudgetCardProps) {
   const percentage = total > 0 ? Math.round((spent / total) * 100) : 0;
   const remaining = total - spent;
@@ -46,7 +48,7 @@ export default function BudgetCard({
           <div className="text-[11px] tracking-[0.1em] uppercase text-wtext-3 font-medium">
             Trip Budget — {tripName}
           </div>
-          <button className="text-[11px] text-gold font-medium hover:text-gold-3 cursor-pointer">
+          <button onClick={onEditBudget} className="text-[11px] text-gold font-medium hover:text-gold-3 cursor-pointer">
             Edit →
           </button>
         </div>
@@ -104,14 +106,12 @@ export default function BudgetCard({
           </div>
         )}
 
-        {isEmpty && (
-          <button
-            onClick={onAddExpense}
-            className="w-full py-2.5 rounded-lg bg-gradient-to-br from-gold to-gold-2 text-xs text-white font-medium font-body transition-all hover:opacity-90 hover:-translate-y-px flex items-center justify-center gap-1.5 cursor-pointer"
-          >
-            + Add Expense
-          </button>
-        )}
+        <button
+          onClick={onAddExpense}
+          className="w-full py-2.5 mt-3 rounded-lg bg-gradient-to-br from-gold to-gold-2 text-xs text-white font-medium font-body transition-all hover:opacity-90 hover:-translate-y-px flex items-center justify-center gap-1.5 cursor-pointer"
+        >
+          + Add Expense
+        </button>
       </div>
     </div>
   );

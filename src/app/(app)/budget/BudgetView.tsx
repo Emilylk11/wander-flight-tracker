@@ -37,11 +37,20 @@ const categoryOptions = [
 export default function BudgetView({ tripBudgets }: BudgetViewProps) {
   const router = useRouter();
   const [showAddModal, setShowAddModal] = useState<string | null>(null);
+  const [showEditBudget, setShowEditBudget] = useState<string | null>(null);
   const [category, setCategory] = useState('other');
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState('');
   const [loading, setLoading] = useState(false);
+  const [newBudgetTotal, setNewBudgetTotal] = useState('');
+
+  function resetForm() {
+    setCategory('other');
+    setDescription('');
+    setAmount('');
+    setDate('');
+  }
 
   async function handleAddExpense() {
     if (!amount || !showAddModal) return;
@@ -55,10 +64,28 @@ export default function BudgetView({ tripBudgets }: BudgetViewProps) {
       });
       if (!res.ok) throw new Error();
       setShowAddModal(null);
-      setCategory('other');
-      setDescription('');
-      setAmount('');
-      setDate('');
+      resetForm();
+      router.refresh();
+    } catch {
+      // silent fail
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleUpdateBudget() {
+    if (!newBudgetTotal || !showEditBudget) return;
+    setLoading(true);
+
+    try {
+      const res = await fetch(`/api/trips/${showEditBudget}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ total_budget: Number(newBudgetTotal) }),
+      });
+      if (!res.ok) throw new Error();
+      setShowEditBudget(null);
+      setNewBudgetTotal('');
       router.refresh();
     } catch {
       // silent fail
@@ -79,7 +106,8 @@ export default function BudgetView({ tripBudgets }: BudgetViewProps) {
             total={tb.total}
             categories={tb.categories}
             isEmpty={tb.isEmpty}
-            onAddExpense={() => setShowAddModal(tb.tripId)}
+            onAddExpense={() => { resetForm(); setShowAddModal(tb.tripId); }}
+            onEditBudget={() => { setNewBudgetTotal(tb.total > 0 ? String(tb.total) : ''); setShowEditBudget(tb.tripId); }}
           />
         ))}
       </div>
@@ -118,6 +146,29 @@ export default function BudgetView({ tripBudgets }: BudgetViewProps) {
                 {loading ? 'Adding...' : 'Add Expense'}
               </button>
               <button onClick={() => setShowAddModal(null)} className="w-full py-2 border border-wborder rounded-lg bg-transparent text-[13px] text-wtext-2 cursor-pointer font-body transition-all hover:border-gold">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Budget Total Modal */}
+      {showEditBudget && (
+        <div className="fixed inset-0 bg-[rgba(28,26,22,0.5)] z-50 flex items-center justify-center p-4" onClick={() => setShowEditBudget(null)}>
+          <div className="bg-white rounded-2xl p-7 w-full max-w-[340px] shadow-[0_20px_60px_rgba(0,0,0,0.2)]" onClick={(e) => e.stopPropagation()}>
+            <div className="font-display text-xl font-medium mb-1.5">Edit Budget</div>
+            <div className="text-xs text-wtext-3 mb-5">Set the total budget for this trip (USD).</div>
+
+            <div className="flex flex-col gap-3.5">
+              <div>
+                <label className="text-[10px] text-wtext-3 uppercase tracking-[0.1em] font-medium mb-1.5 block">Total Budget (USD)</label>
+                <input type="number" value={newBudgetTotal} onChange={(e) => setNewBudgetTotal(e.target.value)} className="w-full bg-cream border border-wborder rounded-lg px-3 py-2.5 text-sm text-wtext font-body outline-none focus:border-wborder-2" placeholder="5000" />
+              </div>
+              <button onClick={handleUpdateBudget} disabled={!newBudgetTotal || loading} className="w-full py-2.5 rounded-lg bg-gradient-to-br from-gold to-gold-2 text-sm text-white font-medium font-body transition-all hover:opacity-90 disabled:opacity-40 cursor-pointer mt-1">
+                {loading ? 'Saving...' : 'Update Budget'}
+              </button>
+              <button onClick={() => setShowEditBudget(null)} className="w-full py-2 border border-wborder rounded-lg bg-transparent text-[13px] text-wtext-2 cursor-pointer font-body transition-all hover:border-gold">
                 Cancel
               </button>
             </div>

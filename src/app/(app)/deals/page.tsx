@@ -19,7 +19,7 @@ function classifyDeal(price: number, avgPrice: number): 'hot' | 'good' | 'watch'
 }
 
 export default function DealsPage() {
-  const [deals, setDeals] = useState<FlightDeal[]>(mockDeals);
+  const [deals, setDeals] = useState<FlightDeal[]>([]);
   const [priceHistory, setPriceHistory] = useState<PriceHistoryPoint[]>(mockPriceHistory);
   const [historyStats, setHistoryStats] = useState(priceStats);
   const [isLoadingDeals, setIsLoadingDeals] = useState(true);
@@ -76,10 +76,11 @@ export default function DealsPage() {
             setUsingCachedData(true);
           }
         } else {
+          setDeals(mockDeals);
           setUsingCachedData(true);
         }
       } catch {
-        // Graceful fallback to mock data
+        setDeals(mockDeals);
         setUsingCachedData(true);
       } finally {
         setIsLoadingDeals(false);
