@@ -9,7 +9,7 @@ export default async function CompanionPage() {
 
   let userName = 'Traveler';
   let homeAirport = 'TUL — Tulsa, OK';
-  let trips: { name: string; dates: string; destinations: string[] }[] = [];
+  let trips: { id: string; name: string; dates: string; destinations: string[] }[] = [];
   let wishlist: { destination: string; targetDate: string; lastPrice: number }[] = [];
   let savedMessages: { role: 'user' | 'assistant'; content: string }[] = [];
 
@@ -28,6 +28,7 @@ export default async function CompanionPage() {
 
     if (tripsRes.data) {
       trips = tripsRes.data.map((t: any) => ({
+        id: t.id,
         name: t.name,
         dates: t.start_date && t.end_date ? `${t.start_date} — ${t.end_date}` : 'Dates TBD',
         destinations: (t.trip_destinations || []).map((d: any) => d.city),

@@ -11,7 +11,7 @@ type Message = {
 type AriaChatProps = {
   userName?: string;
   homeAirport?: string;
-  trips?: { name: string; dates: string; destinations: string[] }[];
+  trips?: { id?: string; name: string; dates: string; destinations: string[] }[];
   wishlist?: { destination: string; targetDate: string; lastPrice: number }[];
   savedMessages?: Message[];
 };
