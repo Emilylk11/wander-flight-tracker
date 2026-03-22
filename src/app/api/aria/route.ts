@@ -62,14 +62,14 @@ export async function POST(request: NextRequest) {
 
       // Collect all tool uses from the response
       const toolUseBlocks = response.content.filter(
-        (block): block is Anthropic.ContentBlockParam & { type: 'tool_use'; id: string; name: string; input: Record<string, unknown> } =>
-          block.type === 'tool_use'
-      );
+        (block) => block.type === 'tool_use'
+      ) as Array<{ type: 'tool_use'; id: string; name: string; input: Record<string, unknown> }>;
 
       // Add assistant's response (with tool_use blocks) to conversation
       conversationMessages.push({
         role: 'assistant',
-        content: response.content as Anthropic.ContentBlockParam[],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        content: response.content as any,
       });
 
       // Execute each tool and collect results
