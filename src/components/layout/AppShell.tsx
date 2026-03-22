@@ -32,7 +32,8 @@ export default function AppShell({ profile, trips, wishlistCount, children }: Ap
     ? `${userName.split(' ')[0]} ${userName.split(' ')[1][0]}.`
     : userName;
 
-  function handleHomeBaseSelect(display: string, _code: string, _entityId: string) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  function handleHomeBaseSelect(display: string, code: string, entityId: string) {
     setHomeBase(display);
   }
 
