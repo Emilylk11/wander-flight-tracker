@@ -7,16 +7,16 @@ const HEADERS: Record<string, string> = {
 
 // Step 1: Convert city/airport name to skyId + entityId
 export async function searchAirport(query: string) {
-  // Try the primary endpoint
+  // Use the correct endpoint: flights/airports
   const res = await fetch(
-    `${BASE_URL}/flights/searchAirport?query=${encodeURIComponent(query)}&locale=en-US`,
+    `${BASE_URL}/flights/airports?query=${encodeURIComponent(query)}&locale=en-US`,
     { headers: HEADERS }
   );
   if (res.ok) return res.json();
 
-  // Fallback: try alternate endpoint path
+  // Fallback: try auto-complete
   const res2 = await fetch(
-    `${BASE_URL}/flights/search-airport?query=${encodeURIComponent(query)}&locale=en-US`,
+    `${BASE_URL}/flights/auto-complete?query=${encodeURIComponent(query)}&locale=en-US`,
     { headers: HEADERS }
   );
   if (res2.ok) return res2.json();
@@ -50,7 +50,9 @@ export async function searchFlights(params: {
     countryCode: 'US',
   });
 
-  const res = await fetch(`${BASE_URL}/flights/searchFlights?${query}`, {
+  // Use search-roundtrip if returnDate provided, otherwise search-one-way
+  const endpoint = params.returnDate ? 'flights/search-roundtrip' : 'flights/search-one-way';
+  const res = await fetch(`${BASE_URL}/${endpoint}?${query}`, {
     headers: HEADERS,
   });
   if (!res.ok) throw new Error('Flight search failed');
@@ -111,7 +113,7 @@ export async function getPriceCalendar(
   fromDate: string
 ) {
   const res = await fetch(
-    `${BASE_URL}/flights/getPriceCalendar?originSkyId=${originSkyId}&destinationSkyId=${destinationSkyId}&fromDate=${fromDate}&currency=USD`,
+    `${BASE_URL}/flights/price-calendar-web?originSkyId=${originSkyId}&destinationSkyId=${destinationSkyId}&fromDate=${fromDate}&currency=USD`,
     { headers: HEADERS, next: { revalidate: 3600 } }
   );
   if (!res.ok) throw new Error('Price calendar failed');
