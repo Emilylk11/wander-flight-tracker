@@ -52,12 +52,12 @@ export async function POST(request: NextRequest) {
       tools: ariaTools as Anthropic.Tool[],
     });
 
-    // Handle tool use loop (max 3 rounds to prevent infinite loops)
+    // Handle tool use loop (max 10 rounds for multi-item adds)
     let toolRounds = 0;
     const conversationMessages = [...formattedMessages];
     const actionsTaken: string[] = [];
 
-    while (response.stop_reason === 'tool_use' && toolRounds < 3) {
+    while (response.stop_reason === 'tool_use' && toolRounds < 10) {
       toolRounds++;
 
       // Collect all tool uses from the response
@@ -89,6 +89,8 @@ export async function POST(request: NextRequest) {
         const parsed = JSON.parse(result);
         if (parsed.success) {
           actionsTaken.push(toolUse.name);
+        } else {
+          console.log(`[ARIA] Tool ${toolUse.name} failed:`, parsed.error || 'unknown error', 'Input:', JSON.stringify(toolUse.input));
         }
 
         toolResults.push({
