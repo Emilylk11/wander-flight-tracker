@@ -176,6 +176,23 @@ export default function ItineraryView({ trip, destinations, items, homeAirportCo
     groupedByDate[key].push(item);
   });
 
+  // Sort items within each day by time_label
+  function parseTime(t: string | null): number {
+    if (!t) return 9999;
+    const match = t.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
+    if (!match) return 9999;
+    let hours = parseInt(match[1]);
+    const minutes = parseInt(match[2]);
+    const period = (match[3] || '').toUpperCase();
+    if (period === 'PM' && hours !== 12) hours += 12;
+    if (period === 'AM' && hours === 12) hours = 0;
+    return hours * 60 + minutes;
+  }
+
+  Object.keys(groupedByDate).forEach((date) => {
+    groupedByDate[date].sort((a, b) => parseTime(a.time_label) - parseTime(b.time_label));
+  });
+
   const sortedDates = Object.keys(groupedByDate).sort();
 
   return (
